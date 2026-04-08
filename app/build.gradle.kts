@@ -49,7 +49,8 @@ android {
 }
 
 dependencies {
-        // 1. Compose BOM (Latest Stable Release)
+        implementation(libs.androidx.compose.foundation.layout)
+    // 1. Compose BOM (Latest Stable Release)
         val composeBom = platform("androidx.compose:compose-bom:2026.03.00")
         implementation(composeBom)
         androidTestImplementation(composeBom)
@@ -60,6 +61,9 @@ dependencies {
         implementation("androidx.compose.material3:material3")
         implementation("androidx.compose.ui:ui-tooling-preview")
         debugImplementation("androidx.compose.ui:ui-tooling")
+
+        // Icon
+        implementation("androidx.compose.material:material-icons-extended")
 
         // 3. Lifecycle ViewModel for Compose (Latest Stable)
         implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
