@@ -74,10 +74,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.amanansari.spendly.R
 import com.amanansari.spendly.components.CategoryIconBox
-import com.amanansari.spendly.components.SpendlyCategory
-import com.amanansari.spendly.components.allCategories
+import com.amanansari.spendly.components.ExpIncCategory
+import com.amanansari.spendly.components.allExpenseCategories
 import com.amanansari.spendly.navigation.screens
+import com.amanansari.spendly.ui.theme.BrightGray
 import com.amanansari.spendly.ui.theme.DarkOverlay
+import com.amanansari.spendly.ui.theme.DarkSurface
 import com.amanansari.spendly.ui.theme.ExpenseRed
 import com.amanansari.spendly.ui.theme.IncomeGreen
 import com.amanansari.spendly.ui.theme.LightBg
@@ -92,21 +94,23 @@ import com.amanansari.spendly.ui.theme.PrimaryLight
 import com.amanansari.spendly.ui.theme.SpendlyTheme
 
 @Composable
-fun HomeScreen(onClickSheet : (SpendlyCategory) -> Unit) {
+fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
 
     val name = "Aman Ansari"
+    val isTransaction = false
 
     val gradient = Brush.linearGradient(
         colors = listOf(
             PrimaryDark.copy(alpha = 1.0f),
-            Primary.copy(alpha = 1.0f)
+            Primary.copy(alpha = 1.0f),
+            PrimaryLight.copy(alpha = 1.0f)
 
         ),
         start = Offset(0f, 0f),
         end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY) // Diagonal from top-left to bottom-right
     )
 
-    var quickSelectedCategory by remember { mutableStateOf<SpendlyCategory?>(null) }
+    var quickSelectedCategory by remember { mutableStateOf< ExpIncCategory.ExpenseCategory?>(null) }
     val context = LocalContext.current
 
     LazyColumn(
@@ -120,7 +124,7 @@ fun HomeScreen(onClickSheet : (SpendlyCategory) -> Unit) {
 
 
 
-            //! Income Information Card
+            //TODO: Redesigning the Entire Card
 
             //? We use a Box instead of a Card because making a Card's background transparent
             //? (which is necessary to show our custom gradient) breaks its built-in drop shadow.
@@ -128,7 +132,7 @@ fun HomeScreen(onClickSheet : (SpendlyCategory) -> Unit) {
             item {
                 Box(
                     modifier = Modifier
-                        .width(350.dp) // Keeps your horizontal size
+                        .fillMaxWidth() // Keeps your horizontal size
                         .clip(RoundedCornerShape(20.dp)) // Keeps the gradient inside the rounded corners
                         .background(gradient) // Applies the purple gradient
                         .border(
@@ -142,16 +146,28 @@ fun HomeScreen(onClickSheet : (SpendlyCategory) -> Unit) {
                     ) {
                         // Current Income Column Styling
                         Column {
-                            Text(
-                                text = "TOTAL SPENT THIS MONTH",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = LightSurface
-                            )
+
+                            Row(){
+                                Text(
+                                    text = "TOTAL BALANCE",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = BrightGray
+                                )
+                            }
+
                             Text(
                                 text = "$12,480.00",
                                 style = MaterialTheme.typography.headlineLarge,
                                 color = LightSurface,
                                 fontWeight = FontWeight.Bold
+                            )
+
+                            Text(
+                                text = "Available to Spend this Month",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = BrightGray
                             )
                         }
 
@@ -374,7 +390,7 @@ fun HomeScreen(onClickSheet : (SpendlyCategory) -> Unit) {
                 }
             }
 
-            val isTransaction = true
+
             //? Daily Transactions Shown If Transaction is Done
             if(isTransaction){
                 items(5) {
@@ -399,7 +415,7 @@ fun HomeScreen(onClickSheet : (SpendlyCategory) -> Unit) {
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                 // TODO: Make Changes in This,
                                 // TODO: Make the Create Separate Code for Viewing Icon here
-                                CategoryIconBox(category = SpendlyCategory.Food, isSelected = false, onClick = {  })
+                                CategoryIconBox(category = ExpIncCategory.ExpenseCategory.Food, isSelected = false, onClick = {  })
 
                                 Column {
                                     Text(
@@ -514,7 +530,7 @@ fun HomeScreen(onClickSheet : (SpendlyCategory) -> Unit) {
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         contentPadding = PaddingValues(end = 16.dp)
                     ) {
-                        items(allCategories){ category ->
+                        items(allExpenseCategories){ category ->
 
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,

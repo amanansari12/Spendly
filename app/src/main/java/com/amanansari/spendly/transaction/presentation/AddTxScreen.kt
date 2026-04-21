@@ -60,8 +60,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.amanansari.spendly.components.AddIncomeExpenseCategoryItem
-import com.amanansari.spendly.components.SpendlyCategory
-import com.amanansari.spendly.components.allCategories
+import com.amanansari.spendly.components.ExpIncCategory
+import com.amanansari.spendly.components.allExpenseCategories
+import com.amanansari.spendly.components.allIncomeCategories
 import com.amanansari.spendly.ui.theme.BrightGray
 import com.amanansari.spendly.ui.theme.ExpenseRed
 import com.amanansari.spendly.ui.theme.IncomeGreen
@@ -80,8 +81,8 @@ import java.util.Locale
 @Composable
 fun AddTxScreen(showBottomSheet : Boolean,
                 onClick : () -> Unit,
-                selectedCategory : SpendlyCategory? = null,
-                onCategoryChange: (SpendlyCategory) -> Unit,
+                selectedCategory : ExpIncCategory? = null,
+                onCategoryChange: (ExpIncCategory) -> Unit,
                 selectedDate : Long? = null,
                 onDateChange: (Long) -> Unit
 ) {
@@ -113,7 +114,8 @@ fun AddTxScreen(showBottomSheet : Boolean,
                     )
 
                     if(isExpense){
-                        AddExpenseScreen(selectedCategory = selectedCategory,
+                        AddExpenseScreen(
+                            selectedCategory = selectedCategory as? ExpIncCategory.ExpenseCategory?,
                             onCategoryChange = onCategoryChange,
                             selectedDate = selectedDate,
                             onDateChange = onDateChange
@@ -121,7 +123,12 @@ fun AddTxScreen(showBottomSheet : Boolean,
 
                     }
                     else{
-                        AddIncomeScreen()
+                        AddIncomeScreen(
+                            selectedCategory = selectedCategory as? ExpIncCategory.IncomeCategory?,
+                            onCategoryChange = onCategoryChange,
+                            selectedDate = selectedDate,
+                            onDateChange = onDateChange
+                        )
                     }
 
                 }
@@ -132,13 +139,14 @@ fun AddTxScreen(showBottomSheet : Boolean,
                         .height(50.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Primary // 🔥 background color
+                        containerColor = Primary // background color
                     ),
 
                     ) {
                     Text(
                         text = "Save Transaction",
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
                     )
                 }
 
@@ -232,8 +240,8 @@ fun TransactionTypeToggle(
 
 
 @Composable
-fun AddExpenseScreen(selectedCategory: SpendlyCategory?,
-                     onCategoryChange: (SpendlyCategory) -> Unit,
+fun AddExpenseScreen(selectedCategory: ExpIncCategory.ExpenseCategory?,
+                     onCategoryChange: (ExpIncCategory.ExpenseCategory) -> Unit,
                      selectedDate : Long? = null,
                      onDateChange: (Long) -> Unit
 ) {
@@ -314,8 +322,6 @@ fun AddExpenseScreen(selectedCategory: SpendlyCategory?,
             )
         }
 
-
-
         Column(
             modifier = Modifier.padding(vertical =  12.dp, horizontal = 16.dp),
             horizontalAlignment = Alignment.Start
@@ -331,6 +337,7 @@ fun AddExpenseScreen(selectedCategory: SpendlyCategory?,
             Spacer(modifier = Modifier.height(8.dp))
 
             CategoryGrid(
+                categories = allExpenseCategories,
                 selectedCategory = selectedCategory,
                 onCategorySelected = onCategoryChange
             )
@@ -353,89 +360,139 @@ fun AddExpenseScreen(selectedCategory: SpendlyCategory?,
 
 
 @Composable
-fun AddIncomeScreen(){
+fun AddIncomeScreen(
+    selectedCategory: ExpIncCategory.IncomeCategory?,
+    onCategoryChange: (ExpIncCategory.IncomeCategory) -> Unit,
+    selectedDate : Long? = null,
+    onDateChange: (Long) -> Unit
+){
     var amount by remember { mutableStateOf("") }
     val amountDecimal = amount.toBigDecimalOrNull() ?: BigDecimal.ZERO
+    var expenseNote by remember { mutableStateOf("") }
     Column(
         modifier = Modifier.padding(top = 40.dp).fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ){
-        Text(
-            text = "ENTER AMOUNT",
-            color = LightNavInactive,
-            fontWeight = FontWeight.Bold,
-            fontSize = 10.sp
-        )
 
-        Spacer(modifier = Modifier.height(8.dp))
 
         Column(
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
+            Text(
+                text = "ENTER AMOUNT",
+                color = LightNavInactive,
+                fontWeight = FontWeight.Bold,
+                fontSize = 10.sp
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
 
-                Text(
-                    text = "$",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    color = PrimaryDark,
-                    modifier = Modifier.padding(end = 4.dp)
-                )
-
-                BasicTextField(
-                    value = amount,
-                    onValueChange = {amount = it},
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    textStyle = TextStyle(
-                        fontSize = 28.sp,
+                    Text(
+                        text = "$",
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    ),
-                    cursorBrush = SolidColor(PrimaryDark),
-                    modifier = Modifier.width(IntrinsicSize.Min),
-                    decorationBox = { innerTextField ->
-                        Box(modifier = Modifier.heightIn(min = 36.dp),
-                            contentAlignment = Alignment.CenterStart) {
-                            if (amount.isEmpty()) {
-                                Text(text = "0.00",
-                                    fontSize = 28.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Platinum
-                                )
+                        fontSize = 15.sp,
+                        color = PrimaryDark,
+                        modifier = Modifier.padding(end = 4.dp)
+                    )
+
+                    BasicTextField(
+                        value = amount,
+                        onValueChange = {amount = it},
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        textStyle = TextStyle(
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        ),
+                        cursorBrush = SolidColor(PrimaryDark),
+                        modifier = Modifier.width(IntrinsicSize.Min),
+                        decorationBox = { innerTextField ->
+                            Box(modifier = Modifier.heightIn(min = 36.dp),
+                                contentAlignment = Alignment.CenterStart) {
+                                if (amount.isEmpty()) {
+                                    Text(text = "0.00",
+                                        fontSize = 28.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Platinum
+                                    )
+                                }
+                                innerTextField()
                             }
-                            innerTextField()
                         }
-                    }
 
 
-                )
+                    )
 
 
+                }
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            HorizontalDivider(
+                modifier = Modifier.width(80.dp),
+                thickness = 2.dp,
+                color = IncomeGreen
+            )
+
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Column(
+            modifier = Modifier.padding(vertical =  12.dp, horizontal = 16.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
 
-        HorizontalDivider(
-            modifier = Modifier.width(80.dp),
-            thickness = 2.dp,
-            color = IncomeGreen
-        )
+            Text(
+                text = "Category",
+                color = LightNavInactive,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            CategoryGrid(
+                categories = allIncomeCategories,
+                selectedCategory = selectedCategory,
+                onCategorySelected = onCategoryChange
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 30.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                ExpenseNoteField(value = expenseNote, onValueChange = {value -> expenseNote = value} )
+                Spacer(modifier = Modifier.height(8.dp))
+                DatePickerField(selectedDate = selectedDate, onDateChange = onDateChange)
+            }
+
+        }
+
+
+
     }
 }
 
 
 @Composable
-fun CategoryGrid(
-    selectedCategory: SpendlyCategory?,
-    onCategorySelected: (SpendlyCategory) -> Unit
+fun<T : ExpIncCategory> CategoryGrid(
+    categories: List<T>,
+    selectedCategory: T?,
+    onCategorySelected: (T) -> Unit
 ) {
-
-//    var selectedCategory by remember { mutableStateOf<SpendlyCategory?>(null) }
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(3),
@@ -446,7 +503,7 @@ fun CategoryGrid(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(16.dp)
     ) {
-        items(allCategories) { category ->
+        items(categories) { category ->
 
             AddIncomeExpenseCategoryItem(
                 category = category,
@@ -563,7 +620,7 @@ fun formatDate(millis: Long?): String {
 fun AddTxScreenPreview() {
     AddTxScreen(true,
         onClick = {},
-        selectedCategory = SpendlyCategory.Food,
+        selectedCategory = ExpIncCategory.ExpenseCategory.Food,
         onCategoryChange = {},
         selectedDate = System.currentTimeMillis(),
         onDateChange = {})

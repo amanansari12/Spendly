@@ -39,7 +39,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.amanansari.spendly.components.SpendlyCategory
+import com.amanansari.spendly.components.ExpIncCategory
 import com.amanansari.spendly.home.HomeScreen
 import com.amanansari.spendly.navigation.Screen
 import com.amanansari.spendly.navigation.screens
@@ -60,7 +60,7 @@ fun MainScreen(){
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
-    var selectedCategory  by remember { mutableStateOf<SpendlyCategory?>(null) }
+    var selectedCategory  by remember { mutableStateOf< ExpIncCategory?>(null) }
     var selectedDate by remember { mutableStateOf<Long?>(System.currentTimeMillis()) }
 
     val name = "Aman Ansari"
@@ -110,7 +110,7 @@ fun MainScreen(){
         AddTxScreen(showBottomSheet,
             onClick = { showBottomSheet = false},
             selectedCategory = selectedCategory,
-            onCategoryChange = { selectedCategory = it },
+            onCategoryChange = { category -> selectedCategory = category },
             selectedDate = selectedDate,
             onDateChange = {selectedDate = it}
         )
