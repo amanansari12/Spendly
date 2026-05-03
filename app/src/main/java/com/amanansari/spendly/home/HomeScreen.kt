@@ -1,12 +1,15 @@
 package com.amanansari.spendly.home
 
+import android.os.Build
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -25,10 +28,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material.icons.filled.SouthWest
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material.icons.rounded.Receipt
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -39,15 +48,12 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarDefaults
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -69,10 +75,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import com.amanansari.spendly.R
 import com.amanansari.spendly.components.CategoryIconBox
 import com.amanansari.spendly.components.ExpIncCategory
 import com.amanansari.spendly.components.allExpenseCategories
@@ -84,6 +86,7 @@ import com.amanansari.spendly.ui.theme.ExpenseRed
 import com.amanansari.spendly.ui.theme.IncomeGreen
 import com.amanansari.spendly.ui.theme.LightBg
 import com.amanansari.spendly.ui.theme.LightBorder
+import com.amanansari.spendly.ui.theme.LightGray
 import com.amanansari.spendly.ui.theme.LightNavInactive
 import com.amanansari.spendly.ui.theme.LightSurface
 import com.amanansari.spendly.ui.theme.LightTextPrimary
@@ -92,26 +95,30 @@ import com.amanansari.spendly.ui.theme.Primary
 import com.amanansari.spendly.ui.theme.PrimaryDark
 import com.amanansari.spendly.ui.theme.PrimaryLight
 import com.amanansari.spendly.ui.theme.SpendlyTheme
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
 
     val name = "Aman Ansari"
     val isTransaction = false
 
-    val gradient = Brush.linearGradient(
-        colors = listOf(
-            PrimaryDark.copy(alpha = 1.0f),
-            Primary.copy(alpha = 1.0f),
-            PrimaryLight.copy(alpha = 1.0f)
-
-        ),
-        start = Offset(0f, 0f),
-        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY) // Diagonal from top-left to bottom-right
-    )
+    val currentDate = LocalDate.now()
+    val formatter = DateTimeFormatter.ofPattern("MMMM yyyy")
+    val formattedDate = currentDate.format(formatter)
 
     var quickSelectedCategory by remember { mutableStateOf< ExpIncCategory.ExpenseCategory?>(null) }
     val context = LocalContext.current
+
+    val unAllocatedAmount = remember { mutableIntStateOf(0) }
+    val totalIncome = remember { mutableIntStateOf(30000) }
+    val currency = remember { mutableStateOf("$") }
+    val currentMonthIncome = remember { mutableIntStateOf(28000) }
+    val surplus = remember { mutableStateOf(2500) }
+    val exp = 8500
+    val remain = 4000
 
     LazyColumn(
             modifier = Modifier
@@ -121,173 +128,358 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
             horizontalAlignment = Alignment.Start
             
         ) {
-
-
-
-            //TODO: Redesigning the Entire Card
-
+            //! Redesigned the Entire BalanceSummaryCard
             //? We use a Box instead of a Card because making a Card's background transparent
             //? (which is necessary to show our custom gradient) breaks its built-in drop shadow.
             //? A Box with explicit .shadow() and .background() modifiers gives us perfect control.
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth() // Keeps your horizontal size
-                        .clip(RoundedCornerShape(20.dp)) // Keeps the gradient inside the rounded corners
-                        .background(gradient) // Applies the purple gradient
-                        .border(
-                            width = 1.dp,
-                            color = Color.White.copy(alpha = 0.2f),
-                            shape = RoundedCornerShape(20.dp)
-                        )
+                BoxWithConstraints(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        // Current Income Column Styling
-                        Column {
-
-                            Row(){
-                                Text(
-                                    text = "TOTAL BALANCE",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = BrightGray
-                                )
-                            }
-
-                            Text(
-                                text = "$12,480.00",
-                                style = MaterialTheme.typography.headlineLarge,
-                                color = LightSurface,
-                                fontWeight = FontWeight.Bold
-                            )
-
-                            Text(
-                                text = "Available to Spend this Month",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = BrightGray
-                            )
-                        }
-
-                        HorizontalDivider(
-                            modifier = Modifier.padding(top = 16.dp, bottom = 16.dp),
-                            color = Color.White.copy(alpha = 0.2f) // Optional: makes the divider blend better with the gradient
+                    val gradient = Brush.linearGradient(
+                        colorStops = arrayOf(
+                            0.0f to PrimaryDark,
+                            0.5f to Primary,
+                            1.0f to PrimaryLight
+                        ),
+                        start = Offset(0f, 0f),
+                        end = Offset(
+                            constraints.maxWidth.toFloat(),
+                            constraints.maxHeight.toFloat() * 0.7f
                         )
+                    )
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth() // Keeps your horizontal size
+                            .clip(RoundedCornerShape(20.dp)) // Keeps the gradient inside the rounded corners
+                            .background(gradient) // Applies the purple gradient
+                            .border(
+                                width = 1.dp,
+                                color = Color.White.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(20.dp)
+                            )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp)
                         ) {
-                            // Income Column Styling
+                            // Current Income Column Styling
                             Column {
-                                Text(
-                                    text = "INCOME",
-                                    fontSize = 12.sp,
-                                    color = LightSurface
-                                )
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Default.ArrowUpward,
-                                        contentDescription = "Income Up",
-                                        tint = IncomeGreen,
-                                        modifier = Modifier.size(16.dp)
-                                    )
 
-                                    Spacer(modifier = Modifier.width(4.dp))
-
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ){
                                     Text(
-                                        text = "+$28,000",
-                                        fontSize = 20.sp,
+                                        text = "TOTAL BALANCE",
+                                        fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = LightSurface
+                                        color = LightGray
                                     )
+
+                                    Row(
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(40))
+                                            .background(color = Color.White.copy(alpha = 0.15f))
+                                            .padding(horizontal = 6.dp)
+
+                                    ){
+                                        Icon(
+                                            imageVector = Icons.Default.CalendarMonth,
+                                            contentDescription = null,
+                                            tint = BrightGray,
+                                            modifier = Modifier.size(14.dp).padding(end = 2.dp)
+                                        )
+
+                                        Text(
+                                            text = formattedDate,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = BrightGray,
+                                        )
+                                    }
+
+                                }
+
+                                Text(
+                                    text = "$12,480.00",
+                                    style = MaterialTheme.typography.headlineLarge,
+                                    color = LightSurface,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                Text(
+                                    text = "Available to Spend this Month",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = LightGray
+                                )
+
+                                if(true){
+
+                                    Row(
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(40))
+                                            .background(color = Color.Red.copy(alpha = 0.14f))
+                                            .padding(horizontal = 6.dp)
+
+                                    ) {
+
+                                        Icon(
+                                            imageVector = Icons.Default.WarningAmber,
+                                            contentDescription = null,
+                                            tint = Color(0xFFFFDB58),
+                                            modifier = Modifier.size(14.dp).padding(end = 2.dp)
+                                        )
+
+
+                                        Text(
+                                            text = "$${unAllocatedAmount.value} Unallocated - Tap to Assign",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = LightSurface,
+                                            modifier = Modifier.clickable{
+                                                Toast.makeText(context, "Unallocated Amount Clicked", Toast.LENGTH_SHORT).show()
+                                            }
+
+                                        )
+                                    }
+
                                 }
                             }
 
-                            // Expense Column Styling
+                            HorizontalDivider(
+                                modifier = Modifier.padding(top = 16.dp, bottom = 16.dp),
+                                color = Color.White.copy(alpha = 0.2f) // Optional: makes the divider blend better with the gradient
+                            )
+
                             Column(
-                                horizontalAlignment = Alignment.End
-                            ) {
-                                Text(
-                                    text = "EXPENSES",
-                                    fontSize = 12.sp,
-                                    color = Color.White
-                                )
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(20))
+                                    .background(Color.White.copy(alpha = 0.15f)).
+                                    padding(12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ){
 
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Default.ArrowDownward,
-                                        contentDescription = "Expense Down", // Updated content description
-                                        tint = ExpenseRed,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ){
+                                    Row(
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(4.dp)
+
+                                    ){
+                                        Icon(
+                                            imageVector = Icons.Default.AccountBalanceWallet,
+                                            contentDescription = null,
+                                            tint = IncomeGreen,
+                                            modifier = Modifier.size(15.dp).padding(end = 2.dp)
+                                        )
+
+                                        Text(
+                                            text = "TOTAL INCOME",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = LightSurface
+                                        )
+                                    }
 
                                     Text(
-                                        text = "-$28,000",
-                                        fontSize = 20.sp,
+                                        text = "+${currency.value} ${totalIncome.value}",
+                                        fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = LightSurface
+                                        color = IncomeGreen
                                     )
+
+                                }
+
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ){
+                                    Column(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(20))
+                                            .background(Color.White.copy(alpha = 0.15f))
+                                            .padding(horizontal = 12.dp)
+                                            .width(100.dp),
+
+                                        verticalArrangement = Arrangement.Center
+
+                                    ){
+                                        Row(
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                        ){
+                                            Icon(
+                                                imageVector = Icons.Default.Payments,
+                                                contentDescription = null,
+                                                tint = LightGray,
+                                                modifier = Modifier.size(12.dp).padding(end = 2.dp)
+                                            )
+
+                                            Text(
+                                                text = "THIS MONTH",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = LightGray
+                                            )
+                                        }
+
+                                        Text(
+                                            text = "${currency.value} ${currentMonthIncome.value}",
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = LightSurface
+                                        )
+
+                                        Text(
+                                            text = "Salary Aug 1",
+                                            fontSize = 8.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = LightGray
+                                        )
+
+                                    }
+
+                                    VerticalDivider(
+                                        thickness = 1.dp,
+                                        modifier = Modifier.height(70.dp),
+                                        color = Color.White.copy(alpha = 0.2f)
+                                    )
+
+                                    Column(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(20))
+                                            .background(Color.White.copy(alpha = 0.15f))
+                                            .padding(horizontal = 12.dp)
+                                            .width(100.dp),
+
+                                        verticalArrangement = Arrangement.Center
+
+                                    ){
+                                        Row(
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                        ){
+                                            Icon(
+                                                imageVector = Icons.Default.SouthWest,
+                                                contentDescription = null,
+                                                tint = IncomeGreen,
+                                                modifier = Modifier.size(12.dp).padding(end = 2.dp)
+                                            )
+
+                                            Text(
+                                                text = "CARRIED",
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = IncomeGreen
+                                            )
+                                        }
+
+                                        Text(
+                                            text = "+ ${currency.value}${currentMonthIncome.intValue}",
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = IncomeGreen
+                                        )
+
+                                        Text(
+                                            text = "July Surplus",
+                                            fontSize = 8.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = LightGray
+                                        )
+
+                                    }
+                                }
+
+
+                            }
+
+                            HorizontalDivider(
+                                modifier = Modifier.padding(top = 16.dp, bottom = 16.dp),
+                                color = Color.White.copy(alpha = 0.2f) // Optional: makes the divider blend better with the gradient
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Income Column Styling
+                                Column {
+                                    Text(
+                                        text = "SPENT",
+                                        fontSize = 12.sp,
+                                        color = LightGray
+                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.ArrowDownward,
+                                            contentDescription = "Spent",
+                                            tint = ExpenseRed,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+
+                                        Spacer(modifier = Modifier.width(4.dp))
+
+                                        Text(
+                                            text = "-$28,000",
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = LightSurface
+                                        )
+                                    }
+                                }
+
+                                // Expense Column Styling
+                                Column(
+                                    horizontalAlignment = Alignment.End
+                                ) {
+                                    Text(
+                                        text = "REMAINING",
+                                        fontSize = 12.sp,
+                                        color = LightGray
+                                    )
+
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.ArrowUpward,
+                                            contentDescription = "Expense Down", // Updated content description
+                                            tint = IncomeGreen,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+
+                                        Text(
+                                            text = "+$28,000",
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = IncomeGreen
+                                        )
+                                    }
                                 }
                             }
-                        }
 
-                        // Month Row View Buttons
-                        Row(
-                            modifier = Modifier
-                                .padding(top = 18.dp) // Only top padding needed now since the Box shrink-wraps
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            FilledTonalButton(
-                                onClick = { /*TODO : */ },
-                                colors = ButtonDefaults.filledTonalButtonColors(
-                                    containerColor = Color.White.copy(alpha = 0.15f),
-                                    contentColor = Color.White
-                                ),
-                                modifier = Modifier
-                                    .defaultMinSize(minHeight = 1.dp)
-                                    .height(32.dp),
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp)
-                            ) {
-                                Text("JUN")
-                            }
-
-                            FilledTonalButton(
-                                onClick = { /*TODO : */ },
-                                colors = ButtonDefaults.filledTonalButtonColors(
-                                    containerColor = Color.White.copy(alpha = 0.15f),
-                                    contentColor = Color.White
-                                ),
-                                modifier = Modifier
-                                    .defaultMinSize(minHeight = 1.dp)
-                                    .height(32.dp),
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp)
-                            ) {
-                                Text("JUL")
-                            }
-
-                            FilledTonalButton(
-                                onClick = { /*TODO : */ },
-                                colors = ButtonDefaults.filledTonalButtonColors(
-                                    containerColor = Color.White.copy(alpha = 0.15f),
-                                    contentColor = Color.White
-                                ),
-                                modifier = Modifier
-                                    .defaultMinSize(minHeight = 1.dp)
-                                    .height(32.dp),
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp)
-                            ) {
-                                Text("AUG")
-                            }
                         }
                     }
                 }
+
+
             }
 
             //? Budget Information Card
@@ -312,7 +504,6 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                         )
                     }
 
-                    // TODO: Add Linear Progress Indicator
                     LinearProgressIndicator(
                         progress = { 0.68f },
                         modifier = Modifier
@@ -327,9 +518,6 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                         drawStopIndicator = {} // Removes the Material 3 stop indicator
                     )
 
-                    val exp = 8500
-                    val remain = 4000
-                    val total = 12000
 
                     // ? How Much Budget Used and Left.
                     Row(
@@ -339,14 +527,22 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
 
                         Text(
                             text = buildAnnotatedString {
-                                append("$$exp of ")
+                                withStyle(
+                                    style = SpanStyle(
+                                        color = LightTextSecondary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                ) {
+                                    append("$$exp ")
+                                }
+                                append(" of ")
 
                                 withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                    append("$$total")
+                                    append("$${totalIncome.value}")
                                 }
 
                             },
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
                         )
 
                         Text(
@@ -575,6 +771,7 @@ fun getInitials(name : String) : String {
 
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
