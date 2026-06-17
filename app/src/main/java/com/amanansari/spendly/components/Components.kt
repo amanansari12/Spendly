@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.ui.theme.LightTextSecondary
 
 @Composable

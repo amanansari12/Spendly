@@ -39,7 +39,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.amanansari.spendly.components.ExpIncCategory
+import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.home.HomeScreen
 import com.amanansari.spendly.navigation.Screen
 import com.amanansari.spendly.navigation.screens
