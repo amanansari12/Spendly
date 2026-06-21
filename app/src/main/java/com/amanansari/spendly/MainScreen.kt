@@ -59,7 +59,7 @@ fun MainScreen(){
     val currentRoute = navBackStackEntry?.destination?.route
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
-    var showBottomSheet by remember { mutableStateOf(false) }
+    var showBottomSheet by remember { mutableStateOf(true) }
     var selectedCategory  by remember { mutableStateOf< ExpIncCategory?>(null) }
     var selectedDate by remember { mutableStateOf<Long?>(System.currentTimeMillis()) }
 

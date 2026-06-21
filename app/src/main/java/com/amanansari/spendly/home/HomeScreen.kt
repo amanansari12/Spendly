@@ -115,7 +115,13 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
             //? We use a Box instead of a Card because making a Card's background transparent
             //? (which is necessary to show our custom gradient) breaks its built-in drop shadow.
             //? A Box with explicit .shadow() and .background() modifiers gives us perfect control.
-            item {
+            /*TODO: Thinking of Adding a Circular Indicator which shows the remaining Budged
+                and also shows the Used Budged
+                The Used Budged Shows in color according to assigned Color and Arrow comes out
+                and Points to the name and as Allocated Money in Budget Increases then color changes
+            */
+        // Balance Summary Card
+        item {
                 BoxWithConstraints(
                     modifier = Modifier.fillMaxWidth()
                 ) {
