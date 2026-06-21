@@ -5,7 +5,8 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "categories")
 data class Categories(
-    @PrimaryKey val categoryId : String, // matches ExpIncCategory.id, e.g. "food"
+    @PrimaryKey
+    val categoryId : String, // matches ExpIncCategory.id, e.g. "food"
     val name: String,
     val type: String, // "EXPENSE" or "INCOME"
     val isSystem: Boolean = true,         // built-in vs user-created later

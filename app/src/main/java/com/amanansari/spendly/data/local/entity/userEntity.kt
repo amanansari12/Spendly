@@ -6,7 +6,9 @@ import androidx.room.PrimaryKey
 //? This Entity class represents a table in the database
 @Entity(tableName = "users")
 data class User(
-    @PrimaryKey(autoGenerate = true) val userId: Int = 0, //? Primary key with auto-generation
+    @PrimaryKey(autoGenerate = true)
+    val userId: Int = 0, /*? Primary key with auto-generation,
+                            Also have option to use UUID instead of Int (Auto-Increment)*/
     val name: String, //? Column for the user's name
     val email: String, //? Column for the user's email
     val currencyCode: String, //? Column for the user's currency
