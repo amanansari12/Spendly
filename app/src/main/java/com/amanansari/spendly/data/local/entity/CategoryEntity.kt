@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "categories")
-data class Categories(
+data class CategoriesEntity(
     @PrimaryKey
     val categoryId : String, // matches ExpIncCategory.id, e.g. "food"
     val name: String,

@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.amanansari.spendly"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.amanansari.spendly"

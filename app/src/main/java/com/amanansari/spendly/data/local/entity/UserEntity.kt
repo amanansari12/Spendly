@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 //? This Entity class represents a table in the database
 @Entity(tableName = "users")
-data class User(
+data class UserEntity(
     @PrimaryKey(autoGenerate = true)
     val userId: Int = 0, /*? Primary key with auto-generation,
                             Also have option to use UUID instead of Int (Auto-Increment)*/
