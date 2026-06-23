@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "income")
-data class Income(
+data class IncomeEntity(
     @PrimaryKey
     val incomeSourceId : String, //? we will be using the UUID for this
 

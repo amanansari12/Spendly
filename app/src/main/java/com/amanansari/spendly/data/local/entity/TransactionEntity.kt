@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "transaction")
-data class Transaction(
+data class TransactionEntity(
     @PrimaryKey
     val transactionId: String, //? We Will be using the UUID for this
 
