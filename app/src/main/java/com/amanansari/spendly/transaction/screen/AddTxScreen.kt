@@ -1,4 +1,4 @@
-package com.amanansari.spendly.transaction.presentation
+package com.amanansari.spendly.transaction.screen
 
 import androidx.compose.material3.DatePicker
 import androidx.compose.foundation.background
