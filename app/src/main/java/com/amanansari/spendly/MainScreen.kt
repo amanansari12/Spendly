@@ -40,10 +40,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.amanansari.spendly.model.ExpIncCategory
-import com.amanansari.spendly.home.HomeScreen
+import com.amanansari.spendly.home.screen.HomeScreen
 import com.amanansari.spendly.navigation.Screen
 import com.amanansari.spendly.navigation.screens
-import com.amanansari.spendly.transaction.presentation.AddTxScreen
+import com.amanansari.spendly.register.viewmodel.UserViewModel
+import com.amanansari.spendly.transaction.screen.AddTxScreen
 import com.amanansari.spendly.ui.theme.LightBg
 import com.amanansari.spendly.ui.theme.LightNavInactive
 import com.amanansari.spendly.ui.theme.LightSurface
@@ -52,7 +53,7 @@ import com.amanansari.spendly.ui.theme.SpendlyTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(){
+fun MainScreen(userViewModel: UserViewModel? = null){
 
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()

@@ -1,4 +1,4 @@
-package com.amanansari.spendly.home
+package com.amanansari.spendly.home.screen
 
 import android.os.Build
 import android.widget.Toast
@@ -81,7 +81,7 @@ import com.amanansari.spendly.ui.theme.SpendlyTheme
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-@RequiresApi(Build.VERSION_CODES.O)
+
 @Composable
 fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
 

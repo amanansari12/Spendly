@@ -2,13 +2,13 @@ package com.amanansari.spendly.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.util.UUID
 
 //? This Entity class represents a table in the database
 @Entity(tableName = "users")
 data class UserEntity(
-    @PrimaryKey(autoGenerate = true)
-    val userId: Int = 0, /*? Primary key with auto-generation,
-                            Also have option to use UUID instead of Int (Auto-Increment)*/
+
+    val userId: UUID = UUID.randomUUID(),
     val name: String, //? Column for the user's name
     val email: String, //? Column for the user's email
     val currencyCode: String, //? Column for the user's currency
