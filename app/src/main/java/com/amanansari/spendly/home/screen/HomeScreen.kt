@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.sp
 import com.amanansari.spendly.components.CategoryIconBox
 import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.model.allExpenseCategories
+import com.amanansari.spendly.onBoarding.viewmodel.UserViewModel
 import com.amanansari.spendly.ui.theme.BrightGray
 import com.amanansari.spendly.ui.theme.ExpenseRed
 import com.amanansari.spendly.ui.theme.IncomeGreen
@@ -82,10 +83,11 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
 
-    val name = "Aman Ansari"
+
     val isTransaction = false
 
     val currentDate = LocalDate.now()
@@ -99,7 +101,7 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
     val totalIncome = remember { mutableIntStateOf(30000) }
     val currency = remember { mutableStateOf("$") }
     val currentMonthIncome = remember { mutableIntStateOf(28000) }
-    val surplus = remember { mutableStateOf(2500) }
+    val surplus = remember { mutableIntStateOf(2500) }
     val exp = 8500
     val remain = 4000
 

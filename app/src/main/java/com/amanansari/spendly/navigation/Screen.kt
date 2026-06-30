@@ -11,7 +11,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class Screen(val title : String, val route : String) {
 
-
+    object Onboarding : Screen("Onboarding", "onboarding")
     object Transactions : Screen("Transactions", "transactions")
     object EditBudget : Screen("Edit Budget", "edit_budget")
     sealed class BottomNav(val bTitle : String, val bRoute : String, val icon : ImageVector) : Screen(bTitle, bRoute) {

@@ -30,21 +30,22 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.amanansari.spendly.home.screen.getInitials
+import com.amanansari.spendly.onBoarding.viewmodel.UserViewModel
 import com.amanansari.spendly.ui.theme.DarkOverlay
 import com.amanansari.spendly.ui.theme.LightTextPrimary
 import com.amanansari.spendly.ui.theme.LightTextSecondary
 import com.amanansari.spendly.ui.theme.LightTintedBg
 import com.amanansari.spendly.ui.theme.Primary
+import androidx.compose.runtime.collectAsState
 
 @Composable
-fun TopBar(navController: NavController) {
+fun TopBar(navController: NavController, userViewModel: UserViewModel) {
 
     // 1. Observe the current route
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-//    val currentRoute = "analytics"
     when(currentRoute){
-        "home" -> HomeTopBar()
+        "home" -> HomeTopBar(userViewModel)
 //        "budget" -> BudgetTopBar()
         "analytics" -> AnalyticsTopBar()
 //        "profile" -> ProfileTopBar()
@@ -56,7 +57,12 @@ fun TopBar(navController: NavController) {
 
 
 @Composable
-fun HomeTopBar(){
+fun HomeTopBar(userViewModel: UserViewModel){
+
+    val user by userViewModel.user.collectAsState()
+
+    val firstname = user?.name?.trim()?.split(" ")?.firstOrNull() ?: "User"
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -72,7 +78,7 @@ fun HomeTopBar(){
                 color = LightTextSecondary
             )
             Text(
-                text = "Hi, Aman 👋",
+                text = "Hi, $firstname 👋",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 color = LightTextPrimary

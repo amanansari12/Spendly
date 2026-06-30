@@ -2,4 +2,9 @@
 <resources>
 
     <style name="Theme.Spendly" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Spendly.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.Spendly</item>
+    </style>
 </resources>

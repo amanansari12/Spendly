@@ -1,6 +1,8 @@
 package com.amanansari.spendly
 
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,7 +46,8 @@ import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.home.screen.HomeScreen
 import com.amanansari.spendly.navigation.Screen
 import com.amanansari.spendly.navigation.screens
-import com.amanansari.spendly.register.viewmodel.UserViewModel
+import com.amanansari.spendly.onBoarding.screen.OnboardingScreen
+import com.amanansari.spendly.onBoarding.viewmodel.UserViewModel
 import com.amanansari.spendly.transaction.screen.AddTxScreen
 import com.amanansari.spendly.ui.theme.LightBg
 import com.amanansari.spendly.ui.theme.LightNavInactive
@@ -52,24 +56,30 @@ import com.amanansari.spendly.ui.theme.Primary
 import com.amanansari.spendly.ui.theme.SpendlyTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MainScreen(userViewModel: UserViewModel? = null){
+fun MainScreen(userViewModel: UserViewModel){
+    val isOnboardingCompleted by userViewModel.isOnboardingCompleted.collectAsState()
+
+    if (isOnboardingCompleted == null) {
+        // abhi loading ho raha hai, NavHost build hi mat kar
+        return
+    }
 
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
-    var showBottomSheet by remember { mutableStateOf(true) }
+    var showBottomSheet by remember { mutableStateOf(false) }
     var selectedCategory  by remember { mutableStateOf< ExpIncCategory?>(null) }
     var selectedDate by remember { mutableStateOf<Long?>(System.currentTimeMillis()) }
 
-    val name = "Aman Ansari"
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = LightBg,
-        topBar = {TopBar(navController)},
+        topBar = {TopBar(navController, userViewModel)},
         bottomBar = {
             if (currentRoute in listOf("home", "budget", "profile", "analytics")) {
                 BottomNavBar(navController)
@@ -91,25 +101,30 @@ fun MainScreen(userViewModel: UserViewModel? = null){
 
     ) { paddingValues ->
 
-        NavHost(
-            navController = navController,
-            startDestination = "home",
-            modifier = Modifier.padding(paddingValues)
-        ) {
-            composable(Screen.BottomNav.Home.bRoute) {
-                HomeScreen(onClickSheet = {
-                    category -> selectedCategory  = category
-                    showBottomSheet = true
+            NavHost(
+                navController = navController,
+                startDestination = if (isOnboardingCompleted == true) Screen.BottomNav.Home.bRoute else Screen.Onboarding.route,
+                modifier = Modifier.padding(paddingValues)
+            ) {
+
+                composable(Screen.Onboarding.route) {
+                    OnboardingScreen(userViewModel)
+                }
+                composable(Screen.BottomNav.Home.bRoute) {
+                    HomeScreen(onClickSheet = { category ->
+                        selectedCategory = category
+                        showBottomSheet = true
                     }
-                )
+                    )
+                }
+                composable(Screen.BottomNav.Analytics.bRoute) {}
+                composable(Screen.BottomNav.Budget.bRoute) {}
+                composable(Screen.BottomNav.Profile.bRoute) {}
             }
-            composable(Screen.BottomNav.Analytics.bRoute) {}
-            composable(Screen.BottomNav.Budget.bRoute) {}
-            composable(Screen.BottomNav.Profile.bRoute) {}
-        }
+
 
         AddTxScreen(showBottomSheet,
-            onClick = { showBottomSheet = false},
+            onClick = { showBottomSheet = true},
             selectedCategory = selectedCategory,
             onCategoryChange = { category -> selectedCategory = category },
             selectedDate = selectedDate,
@@ -223,6 +238,6 @@ fun FloatingActionBtn(onClick : () -> Unit){
 @Composable
 fun MainScreenPreview() {
     SpendlyTheme {
-        MainScreen()
+//        MainScreen()
     }
 }

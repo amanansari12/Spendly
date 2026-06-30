@@ -68,6 +68,7 @@ import com.amanansari.spendly.ui.theme.IncomeGreen
 import com.amanansari.spendly.ui.theme.LightBg
 import com.amanansari.spendly.ui.theme.LightNavInactive
 import com.amanansari.spendly.ui.theme.LightSurface
+import com.amanansari.spendly.ui.theme.LightTextSecondary
 import com.amanansari.spendly.ui.theme.Platinum
 import com.amanansari.spendly.ui.theme.Primary
 import com.amanansari.spendly.ui.theme.PrimaryDark
@@ -524,12 +525,14 @@ fun ExpenseNoteField(
         onValueChange = onValueChange,
         textStyle = LocalTextStyle.current.copy(color = Color.Black),
         placeholder = {
-            Text("What was this for?")
+            Text("What was this for?", color = Color.Gray)
         },
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Edit,
-                contentDescription = null
+                contentDescription = null,
+                tint = LightTextSecondary
+
             )
         },
         shape = RoundedCornerShape(16.dp),
@@ -555,11 +558,13 @@ fun DatePickerField(
         readOnly = true,
         textStyle = LocalTextStyle.current.copy(color = Color.Black),
         leadingIcon = {
-            Icon(imageVector = Icons.Default.DateRange, contentDescription = "Date Picker")
+            Icon(imageVector = Icons.Default.DateRange,
+                contentDescription = "Date Picker",
+                tint = LightTextSecondary
+                )
         },
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         interactionSource = interactionSource,
         singleLine = true
     )

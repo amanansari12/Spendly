@@ -10,8 +10,8 @@ android {
 
     defaultConfig {
         applicationId = "com.amanansari.spendly"
-        minSdk = 26
-        targetSdk = 35
+        minSdk = 24
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
 
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
@@ -69,6 +70,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.datastore.preferences)
     ksp(libs.androidx.room.compiler)
 
     // Testing
