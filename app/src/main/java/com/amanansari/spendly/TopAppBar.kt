@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.amanansari.spendly.home.screen.getInitials
-import com.amanansari.spendly.onBoarding.viewmodel.UserViewModel
+import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModel
 import com.amanansari.spendly.ui.theme.DarkOverlay
 import com.amanansari.spendly.ui.theme.LightTextPrimary
 import com.amanansari.spendly.ui.theme.LightTextSecondary
@@ -39,13 +39,13 @@ import com.amanansari.spendly.ui.theme.Primary
 import androidx.compose.runtime.collectAsState
 
 @Composable
-fun TopBar(navController: NavController, userViewModel: UserViewModel) {
+fun TopBar(navController: NavController, onboardingViewModel: OnboardingViewModel) {
 
     // 1. Observe the current route
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     when(currentRoute){
-        "home" -> HomeTopBar(userViewModel)
+        "home" -> HomeTopBar(onboardingViewModel)
 //        "budget" -> BudgetTopBar()
         "analytics" -> AnalyticsTopBar()
 //        "profile" -> ProfileTopBar()
@@ -57,9 +57,9 @@ fun TopBar(navController: NavController, userViewModel: UserViewModel) {
 
 
 @Composable
-fun HomeTopBar(userViewModel: UserViewModel){
+fun HomeTopBar(onboardingViewModel: OnboardingViewModel){
 
-    val user by userViewModel.user.collectAsState()
+    val user by onboardingViewModel.user.collectAsState()
 
     val firstname = user?.name?.trim()?.split(" ")?.firstOrNull() ?: "User"
 

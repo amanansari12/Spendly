@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
 }
 
@@ -50,6 +51,7 @@ ksp {
 
 dependencies {
 
+    implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.navigation.compose)
 
     implementation(libs.androidx.core.ktx)
@@ -71,6 +73,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.kotlinx.serialization.json)
     ksp(libs.androidx.room.compiler)
 
     // Testing

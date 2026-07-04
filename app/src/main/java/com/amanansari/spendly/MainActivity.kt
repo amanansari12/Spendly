@@ -10,8 +10,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.amanansari.spendly.data.local.db.DatabaseProvider
 import com.amanansari.spendly.data.local.preferences.DataStoreManager
 import com.amanansari.spendly.data.repository.UserRepository
-import com.amanansari.spendly.onBoarding.viewmodel.UserViewModel
-import com.amanansari.spendly.onBoarding.viewmodel.UserViewModelFactory
+import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModel
+import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModelFactory
 import com.amanansari.spendly.ui.theme.SpendlyTheme
 
 class MainActivity : ComponentActivity() {
@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
 
         val dataStoreManager = DataStoreManager(applicationContext)
 
-        val factory = UserViewModelFactory(repository,dataStoreManager)
+        val factory = OnboardingViewModelFactory(repository,dataStoreManager)
 
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(
@@ -40,14 +40,14 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
-            val userViewModel : UserViewModel = viewModel(factory = factory)
+            val onboardingViewModel : OnboardingViewModel = viewModel(factory = factory)
 
             splashScreen.setKeepOnScreenCondition {
-                userViewModel.isOnboardingCompleted.value == null
+                onboardingViewModel.isOnboardingCompleted.value == null
             }
 
             SpendlyTheme {
-                    MainScreen(userViewModel =  userViewModel)
+                    MainScreen(onboardingViewModel =  onboardingViewModel)
             }
         }
     }

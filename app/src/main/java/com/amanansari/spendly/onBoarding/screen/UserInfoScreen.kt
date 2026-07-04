@@ -24,8 +24,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,18 +34,27 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.amanansari.spendly.R
-import com.amanansari.spendly.data.local.entity.UserEntity
+import com.amanansari.spendly.onBoarding.state.UserInfoUiState
 import com.amanansari.spendly.onBoarding.viewmodel.OnboardingStep
-import com.amanansari.spendly.onBoarding.viewmodel.UserViewModel
+import com.amanansari.spendly.onBoarding.viewmodel.UserInfoStep
 import com.amanansari.spendly.ui.theme.LightNavInactive
 import com.amanansari.spendly.ui.theme.LightTextSecondary
 import com.amanansari.spendly.ui.theme.Primary
 
 @Composable
-fun OnboardingScreen(userViewModel: UserViewModel) {
+fun UserInfoScreen(
+    state: UserInfoUiState,
 
-    val isOnboardingCompleted by userViewModel.isOnboardingCompleted.collectAsState()
-    val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(userViewModel._email).matches()
+    onNameChange: (String) -> Unit,
+
+    onEmailChange: (String) -> Unit,
+
+    onNext: () -> Unit,
+
+    onGetStarted: () -> Unit
+) {
+
+    val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(state.email).matches()
 
     Column(modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -93,8 +100,8 @@ fun OnboardingScreen(userViewModel: UserViewModel) {
                 .padding(20.dp),
         ){
 
-            when(userViewModel.currentStep){
-                OnboardingStep.NAME -> {
+            when(state.currentStep){
+                UserInfoStep.NAME -> {
                     Text(text = "YOUR NAME",
                         color = LightNavInactive,
                         fontWeight = FontWeight.Bold,
@@ -102,10 +109,10 @@ fun OnboardingScreen(userViewModel: UserViewModel) {
                     )
 
                     OutlinedTextField(
-                        value = userViewModel._name ?: "",
+                        value = state.name ?: "",
                         onValueChange = { input ->
                             if(input.all { it.isLetter() || it.isWhitespace() }){
-                                userViewModel.updateName(input)
+                                onNameChange(input)
                             }
                         },
                         textStyle = LocalTextStyle.current.copy(color = Color.Black),
@@ -125,8 +132,8 @@ fun OnboardingScreen(userViewModel: UserViewModel) {
 
 
                     Button(
-                        onClick = { userViewModel.goToNextStep() },
-                        enabled = userViewModel._name.isNotBlank(),
+                        onClick = { onNext() },
+                        enabled = state.name.isNotBlank(),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
@@ -148,7 +155,7 @@ fun OnboardingScreen(userViewModel: UserViewModel) {
                     }
                 }
 
-                OnboardingStep.EMAIL -> {
+                UserInfoStep.EMAIL -> {
                     Text(text = "YOUR EMAIL",
                         color = LightNavInactive,
                         fontWeight = FontWeight.Bold,
@@ -156,8 +163,8 @@ fun OnboardingScreen(userViewModel: UserViewModel) {
                     )
 
                     OutlinedTextField(
-                        value = userViewModel._email ?: "",
-                        onValueChange = { userViewModel.updateEmail(it) },
+                        value = state.email ?: "",
+                        onValueChange = { onEmailChange(it) },
                         textStyle = LocalTextStyle.current.copy(color = Color.Black),
                         placeholder = {
                             Text("Please Enter Your Email", color = Color.Gray)
@@ -170,22 +177,13 @@ fun OnboardingScreen(userViewModel: UserViewModel) {
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Email
                         ),
-                        isError = userViewModel._email.isNotBlank() && !isEmailValid,
+                        isError = state.email.isNotBlank() && !isEmailValid,
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedLabelColor = Color.LightGray
                         )
                     )
 
-                    Button(onClick = {
-                        userViewModel.insertUser(
-                            user = UserEntity(
-                                name = userViewModel._name,
-                                email = userViewModel._email,
-                            )
-                        )
-
-                        userViewModel.completeOnboarding()
-                    },
+                    Button(onClick = { onGetStarted() },
                         enabled = isEmailValid,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -200,7 +198,7 @@ fun OnboardingScreen(userViewModel: UserViewModel) {
                         ),
                     ) {
                         Text(
-                            text = "Get Started ",
+                            text = "Next Step -> ",
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
@@ -232,18 +230,23 @@ fun OnboardingScreen(userViewModel: UserViewModel) {
 
             Spacer(modifier = Modifier.height(10.dp))
 
-
-
         }
-
-
-
 
     }
 
 
 @Preview(showBackground = true)
 @Composable
-fun OnboardingScreenPreview(){
-//    OnboardingScreen()
+fun UserInfoScreenPreview() {
+    UserInfoScreen(
+        state = UserInfoUiState(
+            name = "Aman",
+            email = "aman@email.com",
+            currentStep = UserInfoStep.EMAIL
+        ),
+        onNameChange = {},
+        onEmailChange = {},
+        onNext = {},
+        onGetStarted = {}
+    )
 }

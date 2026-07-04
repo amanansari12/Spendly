@@ -43,11 +43,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.amanansari.spendly.model.ExpIncCategory
-import com.amanansari.spendly.home.screen.HomeScreen
-import com.amanansari.spendly.navigation.Screen
-import com.amanansari.spendly.navigation.screens
-import com.amanansari.spendly.onBoarding.screen.OnboardingScreen
-import com.amanansari.spendly.onBoarding.viewmodel.UserViewModel
+import com.amanansari.spendly.navigation.AppNavigation
+import com.amanansari.spendly.navigation.BottomBarItem
+import com.amanansari.spendly.navigation.bottomBarItems
+import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModel
 import com.amanansari.spendly.transaction.screen.AddTxScreen
 import com.amanansari.spendly.ui.theme.LightBg
 import com.amanansari.spendly.ui.theme.LightNavInactive
@@ -58,13 +57,7 @@ import com.amanansari.spendly.ui.theme.SpendlyTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MainScreen(userViewModel: UserViewModel){
-    val isOnboardingCompleted by userViewModel.isOnboardingCompleted.collectAsState()
-
-    if (isOnboardingCompleted == null) {
-        // abhi loading ho raha hai, NavHost build hi mat kar
-        return
-    }
+fun MainScreen(onboardingViewModel: OnboardingViewModel){
 
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -79,7 +72,7 @@ fun MainScreen(userViewModel: UserViewModel){
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = LightBg,
-        topBar = {TopBar(navController, userViewModel)},
+        topBar = {TopBar(navController, onboardingViewModel)},
         bottomBar = {
             if (currentRoute in listOf("home", "budget", "profile", "analytics")) {
                 BottomNavBar(navController)
@@ -101,26 +94,16 @@ fun MainScreen(userViewModel: UserViewModel){
 
     ) { paddingValues ->
 
-            NavHost(
-                navController = navController,
-                startDestination = if (isOnboardingCompleted == true) Screen.BottomNav.Home.bRoute else Screen.Onboarding.route,
-                modifier = Modifier.padding(paddingValues)
-            ) {
-
-                composable(Screen.Onboarding.route) {
-                    OnboardingScreen(userViewModel)
-                }
-                composable(Screen.BottomNav.Home.bRoute) {
-                    HomeScreen(onClickSheet = { category ->
-                        selectedCategory = category
-                        showBottomSheet = true
-                    }
-                    )
-                }
-                composable(Screen.BottomNav.Analytics.bRoute) {}
-                composable(Screen.BottomNav.Budget.bRoute) {}
-                composable(Screen.BottomNav.Profile.bRoute) {}
+        AppNavigation(
+            navController = navController,
+            paddingValues = paddingValues,
+            onboardingViewModel = onboardingViewModel,
+            onCategorySelected = {
+                selectedCategory = it
+                showBottomSheet = true
             }
+        )
+
 
 
         AddTxScreen(showBottomSheet,
@@ -155,7 +138,7 @@ fun BottomNavBar(navController: NavHostController){
             //? Extracts the route (screen name) of the current destination
             val currentRoute = navBackStackEntry?.destination?.route
 
-            screens.forEach { screen ->
+        bottomBarItems.forEach { screen ->
 
                 NavigationBarItem(
                     icon = {
@@ -164,7 +147,7 @@ fun BottomNavBar(navController: NavHostController){
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
-                                    if (currentRoute == screen.bRoute)
+                                    if (currentRoute == screen.route)
                                         Primary.copy(alpha = 0.15f)
                                     else
                                         Color.Transparent
@@ -174,21 +157,21 @@ fun BottomNavBar(navController: NavHostController){
                         ){
                             Icon(
                                 imageVector = screen.icon,
-                                contentDescription = screen.bTitle,
+                                contentDescription = screen.title,
                                 modifier = Modifier.size(24.dp)
                             )
 
                             Text(
-                                text = screen.bTitle,
+                                text = screen.title,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (currentRoute == screen.bRoute) Primary else LightNavInactive
+                                color = if (currentRoute == screen.route) Primary else LightNavInactive
                             )
                         }
                     },
-                selected = currentRoute == screen.bRoute,
+                selected = currentRoute == screen.route,
                     onClick = {
-                        navController.navigate(screen.bRoute) {
+                        navController.navigate(screen.route) {
                             //* Pop up to the start destination of the graph to
                             //* avoid building up a large stack of destinations
                             popUpTo(navController.graph.findStartDestination().id) {
