@@ -2,47 +2,65 @@ package com.amanansari.spendly.onBoarding.viewmodel
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.amanansari.spendly.data.local.entity.UserEntity
 import com.amanansari.spendly.data.local.preferences.DataStoreManager
+import com.amanansari.spendly.data.repository.MonthlyBudgetRepository
 import com.amanansari.spendly.data.repository.UserRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 enum class OnboardingStep{
+
+    USER_INFO,
+    INITIAL_BALANCE,
+}
+
+enum class UserInfoStep{
     NAME,
     EMAIL
 }
-class UserViewModel(
-    private val repository: UserRepository,
+class OnboardingViewModel(
+    private val userRepository: UserRepository,
+    private val monthlyBudgetRepository: MonthlyBudgetRepository,
     private val dataStoreManager: DataStoreManager
 ) : ViewModel() {
 
     //? Onboarding Step
-    var _name by mutableStateOf("")
+    var name by mutableStateOf("")
         private set
 
-    var _email by mutableStateOf("")
+    var email by mutableStateOf("")
         private set
 
-    var currentStep by mutableStateOf(OnboardingStep.NAME)
+    var userInfoStep by mutableStateOf(UserInfoStep.NAME)
+        private set
+
+    var currentStep by mutableStateOf(OnboardingStep.USER_INFO)
         private set
 
     fun updateName(name : String){
-        _name = name
+        this.name = name
     }
 
 
     fun updateEmail(email : String){
-        _email = email
+        this.email = email
     }
 
-    fun goToNextStep(){
-        if(_name.isNotBlank()) currentStep = OnboardingStep.EMAIL
+//    fun goToNextStep(){
+//        if(name.isNotBlank()) currentStep = OnboardingStep.EMAIL
+//    }
+
+    fun goToEmailStep() {
+        if (name.isNotBlank()) userInfoStep = UserInfoStep.EMAIL
+    }
+
+    fun completeUserInfoStep(){
+        if(email.isNotBlank()) currentStep = OnboardingStep.INITIAL_BALANCE
     }
 
     fun completeOnboarding(){
@@ -58,7 +76,7 @@ class UserViewModel(
     )
 
 
-    val user = repository.getUser().stateIn(
+    val user = userRepository.getUser().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
@@ -66,7 +84,7 @@ class UserViewModel(
 
     fun insertUser(user : UserEntity) {
         viewModelScope.launch {
-            repository.insertUser(user)
+            userRepository.insertUser(user)
         }
     }
 }
