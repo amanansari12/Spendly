@@ -51,7 +51,7 @@ fun UserInfoScreen(
 
     onNext: () -> Unit,
 
-    onGetStarted: () -> Unit
+    onNextStep: () -> Unit
 ) {
 
     val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(state.email).matches()
@@ -183,7 +183,7 @@ fun UserInfoScreen(
                         )
                     )
 
-                    Button(onClick = { onGetStarted() },
+                    Button(onClick = { onNextStep() },
                         enabled = isEmailValid,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -247,6 +247,6 @@ fun UserInfoScreenPreview() {
         onNameChange = {},
         onEmailChange = {},
         onNext = {},
-        onGetStarted = {}
+        onNextStep = {}
     )
 }

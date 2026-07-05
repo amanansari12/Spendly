@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.amanansari.spendly.data.local.entity.UserEntity
+import com.amanansari.spendly.onBoarding.screen.InitialBudgetScreen
 import com.amanansari.spendly.onBoarding.screen.UserInfoScreen
 import com.amanansari.spendly.onBoarding.state.UserInfoUiState
 import com.amanansari.spendly.onBoarding.viewmodel.OnboardingStep
@@ -34,14 +35,14 @@ fun OnboardingRoute(onboardingViewModel: OnboardingViewModel, onNext : () -> Uni
                     onboardingViewModel.goToEmailStep()
                 },
 
-                onGetStarted = {
+                onNextStep = {
                     onboardingViewModel.completeUserInfoStep()
                 }
             )
         }
 
         OnboardingStep.INITIAL_BALANCE -> {
-
+            InitialBudgetScreen()
         }
     }
 

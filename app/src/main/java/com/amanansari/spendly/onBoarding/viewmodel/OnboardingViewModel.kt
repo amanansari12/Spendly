@@ -84,6 +84,10 @@ class OnboardingViewModel(
         if(email.isNotBlank()) currentStep = OnboardingStep.INITIAL_BALANCE
     }
 
+//    fun CompletedInitialAmount(){
+//        if(initialAmount != 0.0) currentStep =
+//    }
+
 
     val isOnboardingCompleted = dataStoreManager.onboardingState.stateIn(
         scope = viewModelScope,

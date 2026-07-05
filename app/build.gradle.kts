@@ -52,6 +52,8 @@ ksp {
 dependencies {
 
     implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.foundation)
+    implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
 
     implementation(libs.androidx.core.ktx)
