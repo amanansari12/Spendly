@@ -12,6 +12,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.amanansari.spendly.data.local.db.DatabaseProvider
 import com.amanansari.spendly.data.local.preferences.DataStoreManager
 import com.amanansari.spendly.data.repository.MonthlyBudgetRepository
+import com.amanansari.spendly.data.repository.OnboardingRepository
 import com.amanansari.spendly.data.repository.UserRepository
 import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModel
 import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModelFactory
@@ -28,12 +29,18 @@ class MainActivity : ComponentActivity() {
 
         val database = DatabaseProvider.getDatabase(applicationContext)
 
-        val userRepository = UserRepository(database.userDao())
-        val monthlyBudgetRepository = MonthlyBudgetRepository(database.monthlyBudgetDao())
-
         val dataStoreManager = DataStoreManager(applicationContext)
 
-        val factory = OnboardingViewModelFactory(userRepository, monthlyBudgetRepository, dataStoreManager)
+        val userRepository = UserRepository(database.userDao())
+        val monthlyBudgetRepository = MonthlyBudgetRepository(database.monthlyBudgetDao())
+        val onboardingRepository = OnboardingRepository(
+            database,
+            database.userDao(),
+            database.monthlyBudgetDao(),
+            dataStoreManager)
+
+
+        val factory = OnboardingViewModelFactory(userRepository, onboardingRepository, dataStoreManager)
 
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(

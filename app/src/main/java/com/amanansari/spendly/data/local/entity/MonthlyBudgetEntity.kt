@@ -20,10 +20,10 @@ data class MonthlyBudgetEntity(
 
     val userId : UUID, //? We Will be using the UUID for this
     val monthKey : String, //? Storing the Month-key YYYY-MM
-    val openingBalanceMinor : Long, //? This is the leftover money from the previous month.
-    val incomeTotalMinor : Long, //Sum of income transactions or imported income entries.
-    val allocatedMinor : Long, // The total money available to budget.
-    val closingBalanceMinor: Long, // Shows where default allocations came from.
+    val openingBalanceMinor : Double, //? This is the leftover money from the previous month.
+    val incomeTotalMinor : Double, //Sum of income transactions or imported income entries.
+    val allocatedMinor : Double, // The total money available to budget.
+    val closingBalanceMinor: Double, // Shows where default allocations came from.
     val copiedFromMonthKey : String?,
     val isAutoCopied: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),

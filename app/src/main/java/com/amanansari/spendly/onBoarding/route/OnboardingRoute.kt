@@ -12,8 +12,6 @@ import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModel
 @Composable
 fun OnboardingRoute(onboardingViewModel: OnboardingViewModel, onNext : () -> Unit){
 
-    val isOnboardingCompleted by onboardingViewModel.isOnboardingCompleted.collectAsState()
-
     when(onboardingViewModel.currentStep){
         OnboardingStep.USER_INFO -> {
             val userUIState = UserInfoUiState(
