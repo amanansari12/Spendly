@@ -2,6 +2,7 @@ package com.amanansari.spendly.data.repository
 
 import com.amanansari.spendly.data.local.dao.MonthlyBudgetDao
 import com.amanansari.spendly.data.local.entity.MonthlyBudgetEntity
+import com.amanansari.spendly.data.local.entity.UserEntity
 import kotlinx.coroutines.flow.Flow
 
 class MonthlyBudgetRepository(private val monthlyBudgetDao: MonthlyBudgetDao) {

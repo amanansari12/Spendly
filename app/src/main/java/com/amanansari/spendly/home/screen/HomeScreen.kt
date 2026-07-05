@@ -67,7 +67,6 @@ import androidx.compose.ui.unit.sp
 import com.amanansari.spendly.components.CategoryIconBox
 import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.model.allExpenseCategories
-import com.amanansari.spendly.onBoarding.viewmodel.UserViewModel
 import com.amanansari.spendly.ui.theme.BrightGray
 import com.amanansari.spendly.ui.theme.ExpenseRed
 import com.amanansari.spendly.ui.theme.IncomeGreen
