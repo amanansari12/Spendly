@@ -1,12 +1,20 @@
 package com.amanansari.spendly.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
 
 @Entity(
     tableName = "monthly_budget",
+    foreignKeys = [
+        ForeignKey(
+            entity = UserEntity::class,
+            parentColumns = ["userId"],
+            childColumns = ["userId"]
+        )
+                  ],
     indices = [
         Index(
             value = ["userId", "monthKey"],
@@ -14,7 +22,7 @@ import java.util.UUID
         )
     ]
     )
-data class MonthlyBudgetEntity(
+data class BudgetEntity(
     @PrimaryKey
     val monthlyBudgetId : UUID = UUID.randomUUID(), //? We Will be using the UUID for this
 
