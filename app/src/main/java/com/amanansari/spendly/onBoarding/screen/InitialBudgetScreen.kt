@@ -60,6 +60,7 @@ import com.amanansari.spendly.onBoarding.viewmodel.UserInfoStep
 import com.amanansari.spendly.ui.theme.Platinum
 import com.amanansari.spendly.ui.theme.Primary
 import com.amanansari.spendly.ui.theme.PrimaryDark
+import com.amanansari.spendly.utils.formatAmount
 import java.time.LocalDate
 import kotlin.text.isEmpty
 
@@ -141,7 +142,7 @@ fun InitialBudgetScreen(
                     Spacer(Modifier.width(15.dp))
 
                     BasicTextField(
-                        value = amountText,
+                        value = formatAmount(amountText),
                         onValueChange = { newValue ->
 
                             if(newValue.matches(Regex("^\\d*\\.?\\d*$"))){
@@ -315,37 +316,7 @@ fun InitialBudgetScreen(
 
 }
 
-@Composable
-fun OnboardingTopBar(currentStep: Int, totalStep: Int){
-
-    Column(
-        horizontalAlignment = Alignment.Start,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-
-            ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                contentDescription = "Back",
-                tint = Primary,
-                modifier = Modifier.size(25.dp)
-            )
-
-            Spacer(modifier = Modifier.width(20.dp))
-
-            Text(
-                text = "Step $currentStep of $totalStep",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-    }
-
-}
-
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
 fun InitialBudgetScreenPreview(){

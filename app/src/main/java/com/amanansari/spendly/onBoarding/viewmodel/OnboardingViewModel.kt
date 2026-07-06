@@ -20,10 +20,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-enum class OnboardingStep{
+enum class OnboardingStep(val stepNumber: Int){
 
-    USER_INFO,
-    INITIAL_BALANCE,
+    USER_INFO(1),
+    INITIAL_BALANCE(2),
 }
 
 enum class UserInfoStep{
