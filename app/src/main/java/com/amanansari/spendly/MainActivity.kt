@@ -11,7 +11,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.amanansari.spendly.data.local.db.DatabaseProvider
 import com.amanansari.spendly.data.local.preferences.DataStoreManager
-import com.amanansari.spendly.data.repository.MonthlyBudgetRepository
+import com.amanansari.spendly.data.repository.BudgetRepository
 import com.amanansari.spendly.data.repository.OnboardingRepository
 import com.amanansari.spendly.data.repository.UserRepository
 import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModel
@@ -32,11 +32,12 @@ class MainActivity : ComponentActivity() {
         val dataStoreManager = DataStoreManager(applicationContext)
 
         val userRepository = UserRepository(database.userDao())
-        val monthlyBudgetRepository = MonthlyBudgetRepository(database.monthlyBudgetDao())
+        val budgetRepository = BudgetRepository(database.monthlyBudgetDao())
         val onboardingRepository = OnboardingRepository(
             database,
             database.userDao(),
             database.monthlyBudgetDao(),
+            database.categoryDao(),
             dataStoreManager)
 
 

@@ -3,7 +3,6 @@ package com.amanansari.spendly.onBoarding.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.amanansari.spendly.data.local.preferences.DataStoreManager
-import com.amanansari.spendly.data.repository.MonthlyBudgetRepository
 import com.amanansari.spendly.data.repository.OnboardingRepository
 import com.amanansari.spendly.data.repository.UserRepository
 

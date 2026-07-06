@@ -1,7 +1,6 @@
 package com.amanansari.spendly.onBoarding.viewmodel
 
 import android.os.Build
-import android.util.Log.e
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
@@ -9,7 +8,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.amanansari.spendly.data.local.entity.MonthlyBudgetEntity
 import com.amanansari.spendly.data.local.entity.UserEntity
 import com.amanansari.spendly.data.local.preferences.DataStoreManager
 
