@@ -72,7 +72,7 @@ class OnboardingViewModel(
         this.email = email
     }
 
-    fun updateBudget(amount : Double){
+    fun updateInitialAmount(amount : Double){
         this.initialAmount = amount
     }
 
@@ -106,27 +106,25 @@ class OnboardingViewModel(
     )
 
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun completeOnboardingStep(){
+    fun completeOnboardingStep(){
 
-        if (name.isBlank() || email.isBlank()) {
-            completionState = OnboardingCompletionState.Error("Missing user info")
-            return
+        viewModelScope.launch {
+            if (name.isBlank() || email.isBlank()) {
+                completionState = OnboardingCompletionState.Error("Missing user info")
+                return@launch
+            }
+
+            try{
+                completionState = OnboardingCompletionState.Loading
+                val user = UserEntity(name = name, email = email)
+                onboardingRepository.completeOnboarding(user, initialAmount)
+                completionState = OnboardingCompletionState.Success
+            }
+            catch (e: Exception){
+                completionState = OnboardingCompletionState.Error(e.message ?: "Failed to complete onboarding")
+
+            }
         }
-
-        try{
-            completionState = OnboardingCompletionState.Loading
-            val user = UserEntity(name = name, email = email)
-            onboardingRepository.completeOnboarding(user, initialAmount)
-            completionState = OnboardingCompletionState.Success
-        }
-        catch (e: Exception){
-            completionState = OnboardingCompletionState.Error(e.message ?: "Failed to complete onboarding")
-
-        }
-
-
-
-
 
     }
 

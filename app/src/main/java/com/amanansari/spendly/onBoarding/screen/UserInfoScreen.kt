@@ -242,11 +242,12 @@ fun UserInfoScreenPreview() {
         state = UserInfoUiState(
             name = "Aman",
             email = "aman@email.com",
+            initialAmount = 120000.78,
             currentStep = UserInfoStep.EMAIL
         ),
         onNameChange = {},
         onEmailChange = {},
         onNext = {},
-        onNextStep = {}
+        onNextStep  = {}
     )
 }

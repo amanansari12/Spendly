@@ -1,5 +1,7 @@
 package com.amanansari.spendly.onBoarding.route
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -10,16 +12,19 @@ import com.amanansari.spendly.onBoarding.state.UserInfoUiState
 import com.amanansari.spendly.onBoarding.viewmodel.OnboardingStep
 import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun OnboardingRoute(onboardingViewModel: OnboardingViewModel, onNext : () -> Unit){
+    val userUIState = UserInfoUiState(
+        name = onboardingViewModel.name,
+        email = onboardingViewModel.email,
+        initialAmount = onboardingViewModel.initialAmount,
+        currentStep = onboardingViewModel.userInfoStep,
+        )
 
     when(onboardingViewModel.currentStep){
         OnboardingStep.USER_INFO -> {
-            val userUIState = UserInfoUiState(
-                name = onboardingViewModel.name,
-                email = onboardingViewModel.email,
-                currentStep = onboardingViewModel.userInfoStep,
-            )
+
 
             UserInfoScreen(
                 state = userUIState,
@@ -42,7 +47,15 @@ fun OnboardingRoute(onboardingViewModel: OnboardingViewModel, onNext : () -> Uni
         }
 
         OnboardingStep.INITIAL_BALANCE -> {
-            InitialBudgetScreen()
+            InitialBudgetScreen(
+                state = userUIState,
+                onAmountChange = {
+                    onboardingViewModel.updateInitialAmount(it)
+                },
+                onNextStep = {
+                    onboardingViewModel.completeOnboardingStep()
+                },
+            )
         }
     }
 

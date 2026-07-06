@@ -1,5 +1,7 @@
 package com.amanansari.spendly.onBoarding.screen
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -53,9 +55,12 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.amanansari.spendly.onBoarding.state.UserInfoUiState
+import com.amanansari.spendly.onBoarding.viewmodel.UserInfoStep
 import com.amanansari.spendly.ui.theme.Platinum
 import com.amanansari.spendly.ui.theme.Primary
 import com.amanansari.spendly.ui.theme.PrimaryDark
+import java.time.LocalDate
 import kotlin.text.isEmpty
 
 data class QuickAmount(
@@ -74,11 +79,16 @@ val quickAmounts = listOf(
     QuickAmount("5L", 500_000.0)
 )
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun InitialBudgetScreen() {
+fun InitialBudgetScreen(
+    state : UserInfoUiState,
+    onAmountChange : (Double)->Unit,
+    onNextStep : ()->Unit
+) {
     var amountText by remember { mutableStateOf("") }
-    var amount by remember { mutableDoubleStateOf(0.0) }
-
+    val firstname = state.name.trim().split(" ").firstOrNull() ?: "User"
+    val currentMonth = LocalDate.now().month.name
 
     Column(
         modifier = Modifier.fillMaxSize().padding(18.dp),
@@ -91,7 +101,7 @@ fun InitialBudgetScreen() {
 
         Column() {
             Text(
-                text = "Welcome, Aman!",
+                text = "Welcome, $firstname!",
                 fontWeight = FontWeight.Bold,
                 fontSize = 40.sp
 
@@ -136,7 +146,7 @@ fun InitialBudgetScreen() {
 
                             if(newValue.matches(Regex("^\\d*\\.?\\d*$"))){
                                 amountText = newValue
-                                amount = newValue.toDoubleOrNull() ?: 0.0
+                                onAmountChange(newValue.toDoubleOrNull() ?: 0.0)
                             }
 
                         },
@@ -201,7 +211,7 @@ fun InitialBudgetScreen() {
             ){
                 items(quickAmounts) { quickAmount ->
 
-                    val isSelected = amount == quickAmount.amount
+                    val isSelected = state.initialAmount == quickAmount.amount
 
                     Box(
                         modifier = Modifier
@@ -216,7 +226,8 @@ fun InitialBudgetScreen() {
                                 shape = RoundedCornerShape(12.dp)
                             )
                             .clickable {
-                                amount = quickAmount.amount
+                                amountText = quickAmount.amount.toString()
+                                onAmountChange(quickAmount.amount)
                             }
                             .padding(horizontal = 15.dp, vertical = 10.dp)
 
@@ -263,7 +274,7 @@ fun InitialBudgetScreen() {
                     text = buildAnnotatedString {
                         append("This is your total pool for ")
                         withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("August")
+                            append(currentMonth)
                         }
                         append(". You will divide this into budgets next.")
                     },
@@ -276,7 +287,7 @@ fun InitialBudgetScreen() {
 
         Spacer(modifier = Modifier.weight(1f))
 
-        Button(onClick = {  },
+        Button(onClick = {onNextStep()},
             enabled = true,
             modifier = Modifier
                 .fillMaxWidth()
@@ -338,5 +349,14 @@ fun OnboardingTopBar(currentStep: Int, totalStep: Int){
 @Preview(showBackground = true)
 @Composable
 fun InitialBudgetScreenPreview(){
-    InitialBudgetScreen()
+    InitialBudgetScreen(
+        state = UserInfoUiState(
+            name = "Aman",
+            email = "aman@email.com",
+            initialAmount = 120000.78,
+            currentStep = UserInfoStep.EMAIL
+        ),
+        onAmountChange = {},
+        onNextStep = {}
+    )
 }
