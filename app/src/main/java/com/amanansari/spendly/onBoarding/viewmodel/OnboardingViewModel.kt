@@ -14,15 +14,11 @@ import com.amanansari.spendly.data.local.preferences.DataStoreManager
 
 import com.amanansari.spendly.data.repository.OnboardingRepository
 import com.amanansari.spendly.data.repository.UserRepository
+import com.amanansari.spendly.model.ExpIncCategory
+import com.amanansari.spendly.model.allExpenseCategories
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-
-enum class OnboardingStep(val stepNumber: Int){
-
-    USER_INFO(1),
-    INITIAL_BALANCE(2),
-}
 
 enum class UserInfoStep{
     NAME,
@@ -36,6 +32,12 @@ sealed class OnboardingCompletionState {
     data class Error(val message: String) : OnboardingCompletionState()
 }
 
+data class AllocationRow(
+    val category: ExpIncCategory.ExpenseCategory,
+    val amount: Double,
+    val amountText : String = "",
+    val isCustomised: Boolean = false
+)
 
 class OnboardingViewModel(
     private val userRepository: UserRepository,
@@ -43,6 +45,8 @@ class OnboardingViewModel(
     private val dataStoreManager: DataStoreManager
     ) : ViewModel() {
 
+
+    //? Step - 1
     var completionState by mutableStateOf<OnboardingCompletionState>(OnboardingCompletionState.Idle)
         private set
 
@@ -56,11 +60,7 @@ class OnboardingViewModel(
     var userInfoStep by mutableStateOf(UserInfoStep.NAME)
         private set
 
-    var currentStep by mutableStateOf(OnboardingStep.USER_INFO)
-        private set
 
-    var initialAmount by mutableDoubleStateOf(0.0)
-        private set
 
     fun updateName(name : String){
         this.name = name
@@ -70,22 +70,84 @@ class OnboardingViewModel(
         this.email = email
     }
 
-    fun updateInitialAmount(amount : Double){
-        this.initialAmount = amount
-    }
-
     fun goToEmailStep() {
         if (name.isNotBlank()) userInfoStep = UserInfoStep.EMAIL
     }
 
-    fun completeUserInfoStep(){
-        if(email.isNotBlank()) currentStep = OnboardingStep.INITIAL_BALANCE
+    fun completeUserInfoStep(): Boolean = email.isNotBlank()
+
+    //? Step - 2
+    var initialAmount by mutableDoubleStateOf(0.0)
+        private set
+    fun updateInitialAmount(amount : Double){
+        this.initialAmount = amount
     }
 
-//    fun CompletedInitialAmount(){
-//        if(initialAmount != 0.0) currentStep =
+    fun completeAddBudgetStep(): Boolean = initialAmount != 0.0
+
+
+    //? Step - 3 Budget Allocation
+    var allocations by mutableStateOf<List<AllocationRow>>(emptyList())
+        private set
+
+    var isCategoryPickerVisible by mutableStateOf(false)
+        private set
+
+
+    val availableCategoriesForPicker : List<ExpIncCategory.ExpenseCategory>
+        get() = allExpenseCategories.filterNot { candidate ->
+            allocations.any{it.category.id == candidate.id}
+        }
+
+//    fun addCategoryToAllocation(category: ExpIncCategory.ExpenseCategory) {
+//        allocations = allocations + AllocationRow(category = category, amount = 0.0)
+//        isCategoryPickerVisible = false
 //    }
 
+    fun removeCategoryFromAllocation(categoryId: String) {
+        allocations = allocations.filterNot { it.category.id == categoryId }
+    }
+
+    fun updateAllocationAmount(categoryId: String, newAmount: Double, newAmountText : String) {
+        allocations = allocations.map { row ->
+            if (row.category.id == categoryId) row.copy(amount = newAmount, amountText = newAmountText, isCustomised = true) else row
+        }
+    }
+
+    // Temporary state — only lives while the sheet is open
+    var selectedCategoryIds by mutableStateOf<Set<String>>(emptySet())
+        private set
+
+    fun openCategoryPicker() {
+        selectedCategoryIds = emptySet()   // always start fresh when opening
+        isCategoryPickerVisible = true
+    }
+
+    fun dismissCategoryPicker() {
+        selectedCategoryIds = emptySet()   // discard any half-made selection on cancel
+        isCategoryPickerVisible = false
+    }
+
+    fun toggleCategorySelection(categoryId: String) {
+        selectedCategoryIds = if (categoryId in selectedCategoryIds) {
+            selectedCategoryIds - categoryId
+        } else {
+            selectedCategoryIds + categoryId
+        }
+    }
+
+    fun confirmCategorySelection() {
+        val newRows = availableCategoriesForPicker
+            .filter { it.id in selectedCategoryIds }
+            .map { category -> AllocationRow(category = category, amount = 0.0) }
+
+        allocations = allocations + newRows
+        selectedCategoryIds = emptySet()
+        isCategoryPickerVisible = false
+    }
+
+
+    //? Step 3 End
 
     val isOnboardingCompleted = dataStoreManager.onboardingState.stateIn(
         scope = viewModelScope,
@@ -114,8 +176,9 @@ class OnboardingViewModel(
 
             try{
                 completionState = OnboardingCompletionState.Loading
+
                 val user = UserEntity(name = name, email = email)
-                onboardingRepository.completeOnboarding(user, initialAmount)
+                onboardingRepository.completeOnboarding(user, initialAmount, allocations)
                 completionState = OnboardingCompletionState.Success
             }
             catch (e: Exception){

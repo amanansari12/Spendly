@@ -23,6 +23,8 @@ sealed class ExpIncCategory(
     ) : ExpIncCategory(id,title, icon, color) {
 
         object Food : ExpenseCategory("food","Food & Dining", Icons.Default.LunchDining, Color(0xFFE65100))
+
+        object Rent : ExpenseCategory("rent", "Rent", Icons.Default.House, Color(0xFF29D9BA))
         object Groceries : ExpenseCategory("groceries","Groceries", Icons.Default.ShoppingBasket, Color(0xFF2E7D32))
         object Transport : ExpenseCategory("transport","Transport", Icons.Default.DirectionsBus, Color(0xFF1976D2))
         object Shopping : ExpenseCategory("shopping","Shopping", Icons.Default.ShoppingBag, Color(0xFF7B1FA2))
@@ -55,6 +57,7 @@ sealed class ExpIncCategory(
 // 2. Added explicit scoping (ExpIncCategory.ExpenseCategory)
 val allExpenseCategories = listOf(
     ExpIncCategory.ExpenseCategory.Food,
+    ExpIncCategory.ExpenseCategory.Rent,
     ExpIncCategory.ExpenseCategory.Groceries,
     ExpIncCategory.ExpenseCategory.Transport,
     ExpIncCategory.ExpenseCategory.Shopping,
