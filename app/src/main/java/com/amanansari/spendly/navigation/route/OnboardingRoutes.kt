@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 object UserInfo
 
 @Serializable
-object InitialBalance
+object InitialBudget
 
 @Serializable
-object InitialBudgetSetup
+object InitialBudgetAllocation

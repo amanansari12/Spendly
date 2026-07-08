@@ -26,8 +26,9 @@ import com.amanansari.spendly.ui.theme.LightTextSecondary
 @Composable
 fun CategoryIconBox(
     category: ExpIncCategory.ExpenseCategory,
-    isSelected: Boolean,
-    onClick: () -> Unit) {
+    isSelected: Boolean = false,
+    onClick: (() -> Unit)? = null
+) {
 
     val color = category.color
 
@@ -37,7 +38,14 @@ fun CategoryIconBox(
             .clip(RoundedCornerShape(12.dp))
             // We take the category color and make it very light for the background
             .background(category.color.copy(alpha = 0.1f))
-            .clickable(onClick = onClick),
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable { onClick() }
+                } else {
+                    Modifier
+                }
+            ),
+
         contentAlignment = Alignment.Center
     ) {
         Icon(
