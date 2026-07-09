@@ -1,5 +1,6 @@
 package com.amanansari.spendly.onBoarding.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,7 +20,7 @@ import androidx.compose.ui.unit.sp
 import com.amanansari.spendly.ui.theme.Primary
 
 @Composable
-fun OnboardingTopBar(currentStep: Int, totalStep: Int){
+fun OnboardingTopBar(currentStep: Int, totalStep: Int, onBackClick: (() -> Unit)? = null){
 
     Column(
         horizontalAlignment = Alignment.Start,
@@ -33,7 +34,7 @@ fun OnboardingTopBar(currentStep: Int, totalStep: Int){
                 imageVector = Icons.AutoMirrored.Default.ArrowBack,
                 contentDescription = "Back",
                 tint = Primary,
-                modifier = Modifier.size(25.dp)
+                modifier = Modifier.size(25.dp).clickable(enabled = onBackClick != null) { onBackClick?.invoke() }
             )
 
             Spacer(modifier = Modifier.width(20.dp))

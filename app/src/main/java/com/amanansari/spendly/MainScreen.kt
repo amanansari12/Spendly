@@ -46,6 +46,11 @@ import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.navigation.AppNavigation
 import com.amanansari.spendly.navigation.BottomBarItem
 import com.amanansari.spendly.navigation.bottomBarItems
+import com.amanansari.spendly.navigation.graph.MainNavGraph
+import com.amanansari.spendly.navigation.route.Analytics
+import com.amanansari.spendly.navigation.route.Budget
+import com.amanansari.spendly.navigation.route.Home
+import com.amanansari.spendly.navigation.route.Profile
 import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModel
 import com.amanansari.spendly.transaction.screen.AddTxScreen
 import com.amanansari.spendly.ui.theme.LightBg
@@ -68,19 +73,23 @@ fun MainScreen(onboardingViewModel: OnboardingViewModel){
     var selectedCategory  by remember { mutableStateOf< ExpIncCategory?>(null) }
     var selectedDate by remember { mutableStateOf<Long?>(System.currentTimeMillis()) }
 
+    val bottomBarRoutes = remember {
+        bottomBarItems.map { it.route::class.qualifiedName }
+    }
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = LightBg,
+        containerColor = Color.White,
         topBar = {TopBar(navController, onboardingViewModel)},
         bottomBar = {
-            if (currentRoute in listOf("home", "budget", "profile", "analytics")) {
+            if(currentRoute in bottomBarRoutes){
                 BottomNavBar(navController)
             }
         },
 
         floatingActionButton = {
-            if(currentRoute == "home"){
+            if(currentRoute == Home::class.qualifiedName){
                 FloatingActionBtn(
                     onClick = {
                         showBottomSheet = true
@@ -94,20 +103,19 @@ fun MainScreen(onboardingViewModel: OnboardingViewModel){
 
     ) { paddingValues ->
 
-        AppNavigation(
+
+
+        MainNavGraph(
             navController = navController,
             paddingValues = paddingValues,
-            onboardingViewModel = onboardingViewModel,
             onCategorySelected = {
                 selectedCategory = it
                 showBottomSheet = true
             }
         )
 
-
-
         AddTxScreen(showBottomSheet,
-            onClick = { showBottomSheet = true},
+            onClick = { showBottomSheet = false},
             selectedCategory = selectedCategory,
             onCategoryChange = { category -> selectedCategory = category },
             selectedDate = selectedDate,
@@ -140,6 +148,8 @@ fun BottomNavBar(navController: NavHostController){
 
         bottomBarItems.forEach { screen ->
 
+            val isSelected = currentRoute == screen.route::class.qualifiedName
+
                 NavigationBarItem(
                     icon = {
                         Column(
@@ -147,7 +157,7 @@ fun BottomNavBar(navController: NavHostController){
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
-                                    if (currentRoute == screen.route)
+                                    if (isSelected)
                                         Primary.copy(alpha = 0.15f)
                                     else
                                         Color.Transparent
@@ -169,7 +179,7 @@ fun BottomNavBar(navController: NavHostController){
                             )
                         }
                     },
-                selected = currentRoute == screen.route,
+                selected = isSelected,
                     onClick = {
                         navController.navigate(screen.route) {
                             //* Pop up to the start destination of the graph to

@@ -2,9 +2,9 @@ package com.amanansari.spendly.navigation.graph
 
 import android.os.Build
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
@@ -25,7 +25,6 @@ import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModel
 @Composable
 fun OnboardingNavGraph(
     navController: NavHostController,
-    paddingValues: PaddingValues,
     onboardingViewModel: OnboardingViewModel,
 
 ){
@@ -33,7 +32,7 @@ fun OnboardingNavGraph(
     NavHost(
         navController = navController,
         startDestination = UserInfo,
-        modifier = Modifier.padding(paddingValues)
+        modifier = Modifier.statusBarsPadding()
     ){
         composable<UserInfo> {
             val state = UserInfoUiState(
@@ -60,18 +59,29 @@ fun OnboardingNavGraph(
                 name = onboardingViewModel.name,
                 email = onboardingViewModel.email,
                 initialAmount = onboardingViewModel.initialAmount,
+                amountFieldValue = onboardingViewModel.amountFieldValue,
                 currentUserInfoStep = onboardingViewModel.userInfoStep
             )
+
+            BackHandler() {
+                onboardingViewModel.resetInitialBudget()
+                navController.popBackStack()
+            }
+
             InitialBudgetScreen(
                 state = state,
-                onAmountChange = { onboardingViewModel.updateInitialAmount(it) },
+                onAmountChange = { amount, newValue ->
+                    onboardingViewModel.updateInitialAmount(amount, newValue)
+                                 },
                 onNextStep = {
                     if (onboardingViewModel.completeAddBudgetStep()) {
                         navController.navigate(InitialBudgetAllocation)
                     }
                 },
                 onPrevStep = {
-                    navController.navigate(UserInfo)
+                    onboardingViewModel.resetInitialBudget()
+                    navController.popBackStack()
+
                 }
             )
         }
@@ -85,9 +95,14 @@ fun OnboardingNavGraph(
                 selectedCategoryIds = onboardingViewModel.selectedCategoryIds
             )
 
-            // 👇 add this block, right here
+
             LaunchedEffect(onboardingViewModel.completionState) {
                 Log.d("Onboarding", "completionState = ${onboardingViewModel.completionState}")
+            }
+
+            BackHandler(){
+                onboardingViewModel.removeAllocations()
+                navController.popBackStack()
             }
 
             InitialBudgetAllocationScreen(
@@ -97,15 +112,19 @@ fun OnboardingNavGraph(
                         categoryId, amountText.toDoubleOrNull() ?: 0.0, amountText
                     )
                 },
+                onRemoveCategoryClick = {
+                    onboardingViewModel.removeCategoryFromAllocation(it)
+                },
                 onAddCategoryClick = { onboardingViewModel.openCategoryPicker() },
                 onCategoryToggle = { onboardingViewModel.toggleCategorySelection(it) },
                 onConfirmSelection = { onboardingViewModel.confirmCategorySelection() },
                 onDismissPicker = { onboardingViewModel.dismissCategoryPicker() },
                 onPrevStep = {
-                    navController.navigate(InitialBudget)
+                    onboardingViewModel.removeAllocations()
+                    navController.popBackStack()
+
                 },
-                onFinishClick = { onboardingViewModel.completeOnboardingStep() }
-            )
+            ) { onboardingViewModel.completeOnboardingStep() }
         }
     }
 

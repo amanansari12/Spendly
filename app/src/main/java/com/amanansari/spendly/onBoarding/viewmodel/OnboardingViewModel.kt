@@ -5,7 +5,10 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.amanansari.spendly.data.local.entity.UserEntity
@@ -19,6 +22,7 @@ import com.amanansari.spendly.model.allExpenseCategories
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 enum class UserInfoStep{
     NAME,
@@ -33,6 +37,7 @@ sealed class OnboardingCompletionState {
 }
 
 data class AllocationRow(
+    val rowId : String = UUID.randomUUID().toString(),
     val category: ExpIncCategory.ExpenseCategory,
     val amount: Double,
     val amountText : String = "",
@@ -79,8 +84,22 @@ class OnboardingViewModel(
     //? Step - 2
     var initialAmount by mutableDoubleStateOf(0.0)
         private set
-    fun updateInitialAmount(amount : Double){
+
+    //? This will store the String Value of the amount
+    var amountFieldValue by mutableStateOf(TextFieldValue(""))
+        private set
+
+    fun updateInitialAmount(amount : Double, newValueText : String){
         this.initialAmount = amount
+        this.amountFieldValue = TextFieldValue(
+            text = newValueText,
+            selection = TextRange(newValueText.length)
+            )
+    }
+
+    fun resetInitialBudget() {
+        initialAmount = 0.0
+        amountFieldValue = TextFieldValue("")
     }
 
     fun completeAddBudgetStep(): Boolean = initialAmount != 0.0
@@ -104,14 +123,18 @@ class OnboardingViewModel(
 //        isCategoryPickerVisible = false
 //    }
 
-    fun removeCategoryFromAllocation(categoryId: String) {
-        allocations = allocations.filterNot { it.category.id == categoryId }
+    fun removeCategoryFromAllocation(rowId: String) {
+        allocations = allocations.filterNot { it.rowId == rowId }
     }
 
     fun updateAllocationAmount(categoryId: String, newAmount: Double, newAmountText : String) {
         allocations = allocations.map { row ->
             if (row.category.id == categoryId) row.copy(amount = newAmount, amountText = newAmountText, isCustomised = true) else row
         }
+    }
+
+    fun removeAllocations(){
+        allocations = emptyList()
     }
 
     // Temporary state — only lives while the sheet is open

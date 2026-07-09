@@ -28,7 +28,7 @@ val AccentGlow = Color(0x406C63FF)
 // ==============================================
 // LIGHT MODE TOKENS
 // ==============================================
-val LightBg = Color(0xFFF4F3FF)
+val LightBg = Color(0xD8F6F6FC)
 val LightSurface = Color(0xFFFFFFFF)
 val LightBorder = Color(0xFFE8E6FF)
 val LightTextPrimary = Color(0xFF1C1A3A)

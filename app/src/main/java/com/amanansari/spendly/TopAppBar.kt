@@ -37,6 +37,9 @@ import com.amanansari.spendly.ui.theme.LightTextSecondary
 import com.amanansari.spendly.ui.theme.LightTintedBg
 import com.amanansari.spendly.ui.theme.Primary
 import androidx.compose.runtime.collectAsState
+import com.amanansari.spendly.navigation.BottomBarItem
+import com.amanansari.spendly.navigation.route.Analytics
+import com.amanansari.spendly.navigation.route.Home
 
 @Composable
 fun TopBar(navController: NavController, onboardingViewModel: OnboardingViewModel) {
@@ -45,10 +48,8 @@ fun TopBar(navController: NavController, onboardingViewModel: OnboardingViewMode
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     when(currentRoute){
-        "home" -> HomeTopBar(onboardingViewModel)
-//        "budget" -> BudgetTopBar()
-        "analytics" -> AnalyticsTopBar()
-//        "profile" -> ProfileTopBar()
+        Home::class.qualifiedName -> HomeTopBar(onboardingViewModel)
+        Analytics::class.qualifiedName -> AnalyticsTopBar()
 
     }
 

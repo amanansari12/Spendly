@@ -14,6 +14,7 @@ import com.amanansari.spendly.data.local.preferences.DataStoreManager
 import com.amanansari.spendly.data.repository.BudgetRepository
 import com.amanansari.spendly.data.repository.OnboardingRepository
 import com.amanansari.spendly.data.repository.UserRepository
+import com.amanansari.spendly.navigation.AppNavigation
 import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModel
 import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModelFactory
 import com.amanansari.spendly.ui.theme.SpendlyTheme
@@ -32,12 +33,11 @@ class MainActivity : ComponentActivity() {
         val dataStoreManager = DataStoreManager(applicationContext)
 
         val userRepository = UserRepository(database.userDao())
-        val budgetRepository = BudgetRepository(database.monthlyBudgetDao())
         val onboardingRepository = OnboardingRepository(
             database,
             database.userDao(),
             database.monthlyBudgetDao(),
-            database.categoryDao(),
+            database.budgetAllocationDao(),
             dataStoreManager)
 
 
@@ -60,7 +60,9 @@ class MainActivity : ComponentActivity() {
             }
 
             SpendlyTheme {
-                    MainScreen(onboardingViewModel =  onboardingViewModel)
+                AppNavigation(
+                    onboardingViewModel = onboardingViewModel
+                )
             }
         }
     }

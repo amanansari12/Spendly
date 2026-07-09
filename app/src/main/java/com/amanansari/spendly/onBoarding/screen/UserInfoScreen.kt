@@ -12,13 +12,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -35,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.amanansari.spendly.R
 import com.amanansari.spendly.onBoarding.state.UserInfoUiState
-import com.amanansari.spendly.onBoarding.viewmodel.OnboardingStep
 import com.amanansari.spendly.onBoarding.viewmodel.UserInfoStep
 import com.amanansari.spendly.ui.theme.LightNavInactive
 import com.amanansari.spendly.ui.theme.LightTextSecondary
@@ -56,7 +58,9 @@ fun UserInfoScreen(
 
     val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(state.email).matches()
 
-    Column(modifier = Modifier.fillMaxSize(),
+    Column(modifier = Modifier
+        .fillMaxSize()
+        ,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
         ){
@@ -100,7 +104,7 @@ fun UserInfoScreen(
                 .padding(20.dp),
         ){
 
-            when(state.currentStep){
+            when(state.currentUserInfoStep){
                 UserInfoStep.NAME -> {
                     Text(text = "YOUR NAME",
                         color = LightNavInactive,
@@ -183,25 +187,39 @@ fun UserInfoScreen(
                         )
                     )
 
-                    Button(onClick = { onNextStep() },
+                    Button(
+                        onClick = { onNextStep() },
                         enabled = isEmailValid,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Primary, // background color
+                            containerColor = Primary,
                             contentColor = Color.White,
-
                             disabledContainerColor = Color.LightGray,
                             disabledContentColor = Color.DarkGray,
                         ),
                     ) {
-                        Text(
-                            text = "Next Step -> ",
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Next Step",
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+
+                            Spacer(modifier = Modifier.width(6.dp))
+
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                tint = LocalContentColor.current,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
 
                 }
@@ -243,7 +261,7 @@ fun UserInfoScreenPreview() {
             name = "Aman",
             email = "aman@email.com",
             initialAmount = 120000.78,
-            currentStep = UserInfoStep.EMAIL
+            currentUserInfoStep = UserInfoStep.NAME
         ),
         onNameChange = {},
         onEmailChange = {},

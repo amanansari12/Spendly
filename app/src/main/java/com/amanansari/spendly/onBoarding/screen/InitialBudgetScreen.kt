@@ -27,17 +27,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -47,10 +48,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -60,7 +63,6 @@ import com.amanansari.spendly.onBoarding.viewmodel.UserInfoStep
 import com.amanansari.spendly.ui.theme.Platinum
 import com.amanansari.spendly.ui.theme.Primary
 import com.amanansari.spendly.ui.theme.PrimaryDark
-import com.amanansari.spendly.utils.formatAmount
 import java.time.LocalDate
 import kotlin.text.isEmpty
 
@@ -70,33 +72,41 @@ data class QuickAmount(
 )
 
 val quickAmounts = listOf(
-    QuickAmount("10K", 10_000.0),
-    QuickAmount("20K", 20_000.0),
-    QuickAmount("30K", 30_000.0),
-    QuickAmount("40K", 40_000.0),
-    QuickAmount("50K", 50_000.0),
-    QuickAmount("1L", 100_000.0),
-    QuickAmount("2L", 200_000.0),
-    QuickAmount("5L", 500_000.0)
+    QuickAmount("10K", 10_000.00),
+    QuickAmount("20K", 20_000.00),
+    QuickAmount("30K", 30_000.00),
+    QuickAmount("40K", 40_000.00),
+    QuickAmount("50K", 50_000.00),
+    QuickAmount("1L", 100_000.00),
+    QuickAmount("2L", 200_000.00),
+    QuickAmount("5L", 500_000.00)
 )
+
+private const val MAX_AMOUNT_LENGTH = 12
+private val amountRegex = Regex("^\\d{0,10}(\\.\\d{0,2})?$")
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun InitialBudgetScreen(
     state : UserInfoUiState,
-    onAmountChange : (Double)->Unit,
-    onNextStep : ()->Unit
+    onAmountChange : (Double, String)->Unit,
+    onNextStep : ()->Unit,
+    onPrevStep : () -> Unit
 ) {
-    var amountText by remember { mutableStateOf("") }
+
     val firstname = state.name.trim().split(" ").firstOrNull() ?: "User"
     val currentMonth = LocalDate.now().month.name
 
+
+
     Column(
-        modifier = Modifier.fillMaxSize().padding(18.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(18.dp),
         horizontalAlignment = Alignment.Start
     ) {
 
-        OnboardingTopBar(2, 3)
+        OnboardingTopBar(2, 3, onBackClick = onPrevStep)
 
         Spacer(modifier = Modifier.height(60.dp))
 
@@ -142,17 +152,20 @@ fun InitialBudgetScreen(
                     Spacer(Modifier.width(15.dp))
 
                     BasicTextField(
-                        value = formatAmount(amountText),
+                        value = state.amountFieldValue,
                         onValueChange = { newValue ->
 
-                            if(newValue.matches(Regex("^\\d*\\.?\\d*$"))){
-                                amountText = newValue
-                                onAmountChange(newValue.toDoubleOrNull() ?: 0.0)
+                            val newText = newValue.text
+                            if (newText.length <= MAX_AMOUNT_LENGTH && newText.matches(amountRegex)) {
+
+                                onAmountChange(newText.toDoubleOrNull() ?: 0.0, newText)
                             }
 
                         },
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number
+                        ),
                         cursorBrush = SolidColor(PrimaryDark),
                         textStyle = TextStyle(
                             fontSize = 38.sp,
@@ -165,7 +178,7 @@ fun InitialBudgetScreen(
                         decorationBox = { innerTextField ->
                             Box(modifier = Modifier.heightIn(min = 56.dp).padding(4.dp),
                                 contentAlignment = Alignment.CenterStart) {
-                                if (amountText.isEmpty()) {
+                                if (state.amountFieldValue.text.isEmpty()) {
                                     Text(text = "0.00",
                                         fontSize = 38.sp,
                                         lineHeight = 44.sp,
@@ -218,17 +231,17 @@ fun InitialBudgetScreen(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
                             .background(
-                                if (isSelected) PrimaryDark.copy(alpha = 0.15f)
+                                if (isSelected && state.initialAmount > 0.0) PrimaryDark.copy(alpha = 0.15f)
                                 else Color.LightGray.copy(alpha = 0.3f)
                             )
                             .border(
                                 width = 2.dp,
-                                color = if (isSelected) Primary.copy(alpha = 0.4f) else Color.LightGray,
+                                color = if (isSelected && state.initialAmount > 0.0) Primary.copy(alpha = 0.4f) else Color.LightGray,
                                 shape = RoundedCornerShape(12.dp)
                             )
                             .clickable {
-                                amountText = quickAmount.amount.toString()
-                                onAmountChange(quickAmount.amount)
+                                val newText = quickAmount.amount.toString()
+                                onAmountChange(quickAmount.amount, newText)
                             }
                             .padding(horizontal = 15.dp, vertical = 10.dp)
 
@@ -288,25 +301,39 @@ fun InitialBudgetScreen(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        Button(onClick = {onNextStep()},
-            enabled = true,
+        Button(
+            onClick = { onNextStep() },
+            enabled = state.initialAmount > 0,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Primary, // background color
+                containerColor = Primary,
                 contentColor = Color.White,
-
                 disabledContainerColor = Color.LightGray,
                 disabledContentColor = Color.DarkGray,
             ),
         ) {
-            Text(
-                text = "Next Step -> ",
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Next Step",
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+
+                Spacer(modifier = Modifier.width(6.dp))
+
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null,
+                    tint = LocalContentColor.current,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
         }
 
 
@@ -325,9 +352,11 @@ fun InitialBudgetScreenPreview(){
             name = "Aman",
             email = "aman@email.com",
             initialAmount = 120000.78,
-            currentStep = UserInfoStep.EMAIL
+            amountFieldValue = TextFieldValue("120000.78"),
+            currentUserInfoStep = UserInfoStep.EMAIL
         ),
-        onAmountChange = {},
-        onNextStep = {}
+        onAmountChange = {_, _ ->},
+        onNextStep = {},
+        onPrevStep = {}
     )
 }
