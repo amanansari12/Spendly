@@ -19,15 +19,27 @@ import com.amanansari.spendly.data.repository.OnboardingRepository
 import com.amanansari.spendly.data.repository.UserRepository
 import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.model.allExpenseCategories
+import com.amanansari.spendly.model.allIncomeCategories
+import com.amanansari.spendly.model.categoryFromId
+import com.amanansari.spendly.utils.detectDefaultCurrencyInfo
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.Currency
+import java.util.Locale
 import java.util.UUID
+import kotlin.math.roundToLong
 
 enum class UserInfoStep{
     NAME,
     EMAIL
 }
+
+
+data class CurrencyInfo(
+    val code: String,    // "INR" — store this in the DB
+    val symbol: String   // "₹"   — use this for display only
+)
 
 sealed class OnboardingCompletionState {
     object Idle : OnboardingCompletionState()
@@ -79,7 +91,15 @@ class OnboardingViewModel(
         if (name.isNotBlank()) userInfoStep = UserInfoStep.EMAIL
     }
 
+    var currency by mutableStateOf(detectDefaultCurrencyInfo())
+        private set
+
     fun completeUserInfoStep(): Boolean = email.isNotBlank()
+
+
+
+    //? Step - 1 : END
+
 
     //? Step - 2
     var initialAmount by mutableDoubleStateOf(0.0)
@@ -104,6 +124,27 @@ class OnboardingViewModel(
 
     fun completeAddBudgetStep(): Boolean = initialAmount != 0.0
 
+    fun completeIncomeSourceStep(): Boolean = true
+
+    val availableIncomeSource : List<ExpIncCategory.IncomeCategory>
+        get() = allIncomeCategories
+
+    var selectedIncomeSourceId by mutableStateOf<String>("")
+        private set
+
+    val resolvedIncomeCategoryId: String
+        get() = if (selectedIncomeSourceId.isNotBlank()) selectedIncomeSourceId else ExpIncCategory.IncomeCategory.Other.id
+
+    fun resetIncomeSelection() {
+        selectedIncomeSourceId = ""
+    }
+
+    fun toggleIncome(incomeId : String){
+        selectedIncomeSourceId = if (incomeId == selectedIncomeSourceId) "" else incomeId
+    }
+
+    //?    Step - 2 : END
+
 
     //? Step - 3 Budget Allocation
     var allocations by mutableStateOf<List<AllocationRow>>(emptyList())
@@ -118,10 +159,6 @@ class OnboardingViewModel(
             allocations.any{it.category.id == candidate.id}
         }
 
-//    fun addCategoryToAllocation(category: ExpIncCategory.ExpenseCategory) {
-//        allocations = allocations + AllocationRow(category = category, amount = 0.0)
-//        isCategoryPickerVisible = false
-//    }
 
     fun removeCategoryFromAllocation(rowId: String) {
         allocations = allocations.filterNot { it.rowId == rowId }
@@ -201,7 +238,14 @@ class OnboardingViewModel(
                 completionState = OnboardingCompletionState.Loading
 
                 val user = UserEntity(name = name, email = email)
-                onboardingRepository.completeOnboarding(user, initialAmount, allocations)
+                val amount = initialAmount.times(100).roundToLong()
+
+                onboardingRepository.completeOnboarding(user,
+                    amount,
+                    allocations,
+                    resolvedIncomeCategoryId
+                )
+
                 completionState = OnboardingCompletionState.Success
             }
             catch (e: Exception){

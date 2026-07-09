@@ -34,7 +34,7 @@ data class BudgetAllocationEntity(
     val userId : UUID, //? We Will be using the UUID for this
     val monthKey: String,
     val categoryId : String,
-    val allocatedMinor : Double,
+    val allocatedAmount : Long,
     val isCustomised : Boolean,
     val createdAt : Long = System.currentTimeMillis(),
     val updatedAt : Long = System.currentTimeMillis(),

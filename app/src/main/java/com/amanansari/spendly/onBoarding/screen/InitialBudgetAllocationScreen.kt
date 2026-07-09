@@ -71,6 +71,7 @@ import com.amanansari.spendly.ui.theme.LightSurface
 import com.amanansari.spendly.ui.theme.Primary
 import com.amanansari.spendly.ui.theme.PrimaryDark
 import com.amanansari.spendly.ui.theme.SpendlyTheme
+import com.amanansari.spendly.utils.toCurrencyString
 
 @Composable
 fun InitialBudgetAllocationScreen(
@@ -91,7 +92,9 @@ fun InitialBudgetAllocationScreen(
         (state.totalAllocated / state.totalIncome).toFloat().coerceIn(0f, 1f)
     else 0f
 
-
+    val allocatedPercentage = if (state.totalIncome > 0)
+        (state.totalAllocated / state.totalIncome) * 100
+    else 0.0
 
 
     if(state.isCategoryPickerVisible){
@@ -119,7 +122,7 @@ fun InitialBudgetAllocationScreen(
         ) {
 
             item {
-                OnboardingTopBar(3, 3, onPrevStep)
+                OnboardingTopBar(4, 4, onPrevStep)
             }
 
             item {
@@ -195,14 +198,14 @@ fun InitialBudgetAllocationScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = rupee + "${state.totalIncome}",
+                                    text = state.totalIncome.toCurrencyString("INR"),
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 18.sp,
                                     color = Color.Black
                                 )
 
                                 Text(
-                                    text = rupee + "${state.remainingToAllocate}",
+                                    text = state.remainingToAllocate.toCurrencyString("INR"),
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 18.sp,
                                     color = Primary
@@ -239,7 +242,7 @@ fun InitialBudgetAllocationScreen(
                                                     fontWeight = FontWeight.Bold
                                                 )
                                             ) {
-                                                append(String.format("%.2f", (state.totalAllocated / state.totalIncome) * 100))
+                                                append(String.format("%.2f", allocatedPercentage))
                                                 append("%")
                                             }
                                             append(" Allocated")
@@ -250,7 +253,7 @@ fun InitialBudgetAllocationScreen(
                                     )
 
                                     Text(
-                                        text = rupee + state.totalAllocated + "/" + rupee + state.totalIncome,
+                                        text = state.totalAllocated.toCurrencyString("INR") + "/" + state.totalIncome.toCurrencyString("INR"),
                                         fontSize = 14.sp,
                                         color = Color.DarkGray,
                                         fontWeight = FontWeight.SemiBold

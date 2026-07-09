@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.amanansari.spendly.R
 import com.amanansari.spendly.onBoarding.state.UserInfoUiState
+import com.amanansari.spendly.onBoarding.viewmodel.CurrencyInfo
 import com.amanansari.spendly.onBoarding.viewmodel.UserInfoStep
 import com.amanansari.spendly.ui.theme.LightNavInactive
 import com.amanansari.spendly.ui.theme.LightTextSecondary
@@ -107,7 +108,7 @@ fun UserInfoScreen(
             when(state.currentUserInfoStep){
                 UserInfoStep.NAME -> {
                     Text(text = "YOUR NAME",
-                        color = LightNavInactive,
+                        color = Color.DarkGray,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp
                     )
@@ -161,7 +162,7 @@ fun UserInfoScreen(
 
                 UserInfoStep.EMAIL -> {
                     Text(text = "YOUR EMAIL",
-                        color = LightNavInactive,
+                        color = Color.DarkGray,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp
                     )
@@ -216,7 +217,7 @@ fun UserInfoScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = null,
-                                tint = LocalContentColor.current,
+                                tint = Color.White,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -261,7 +262,8 @@ fun UserInfoScreenPreview() {
             name = "Aman",
             email = "aman@email.com",
             initialAmount = 120000.78,
-            currentUserInfoStep = UserInfoStep.NAME
+            currentUserInfoStep = UserInfoStep.NAME,
+            currency = CurrencyInfo("INR","₹")
         ),
         onNameChange = {},
         onEmailChange = {},

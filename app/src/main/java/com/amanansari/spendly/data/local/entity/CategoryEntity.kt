@@ -7,7 +7,6 @@ import androidx.room.PrimaryKey
 data class CategoryEntity(
     @PrimaryKey
     val categoryId : String, // matches ExpIncCategory.id, e.g. "food"
-
     val name: String,
     val type: String, // "EXPENSE" or "INCOME"
     val isSystem: Boolean = true,         // built-in vs user-created later

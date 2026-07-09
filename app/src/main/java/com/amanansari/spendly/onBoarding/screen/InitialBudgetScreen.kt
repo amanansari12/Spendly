@@ -37,18 +37,12 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -59,7 +53,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.amanansari.spendly.onBoarding.state.UserInfoUiState
+import com.amanansari.spendly.onBoarding.viewmodel.CurrencyInfo
 import com.amanansari.spendly.onBoarding.viewmodel.UserInfoStep
+import com.amanansari.spendly.ui.theme.LightSurface
 import com.amanansari.spendly.ui.theme.Platinum
 import com.amanansari.spendly.ui.theme.Primary
 import com.amanansari.spendly.ui.theme.PrimaryDark
@@ -108,7 +104,7 @@ fun InitialBudgetScreen(
 
         OnboardingTopBar(2, 3, onBackClick = onPrevStep)
 
-        Spacer(modifier = Modifier.height(60.dp))
+        Spacer(modifier = Modifier.height(30.dp))
 
         Column() {
             Text(
@@ -143,7 +139,7 @@ fun InitialBudgetScreen(
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     Text(
-                        text = "$",
+                        text = state.currency.symbol,
                         fontWeight = FontWeight.Bold,
                         fontSize = 50.sp,
                         color = PrimaryDark,
@@ -247,7 +243,7 @@ fun InitialBudgetScreen(
 
                     ) {
                         Text(
-                            text = "$"+ quickAmount.label,
+                            text = state.currency.symbol + quickAmount.label,
                             color = if (isSelected) Primary else Color.Black,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                             fontSize = 15.sp
@@ -322,7 +318,7 @@ fun InitialBudgetScreen(
                 Text(
                     text = "Next Step",
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = LightSurface
                 )
 
                 Spacer(modifier = Modifier.width(6.dp))
@@ -330,7 +326,7 @@ fun InitialBudgetScreen(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = null,
-                    tint = LocalContentColor.current,
+                    tint = LightSurface,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -353,7 +349,8 @@ fun InitialBudgetScreenPreview(){
             email = "aman@email.com",
             initialAmount = 120000.78,
             amountFieldValue = TextFieldValue("120000.78"),
-            currentUserInfoStep = UserInfoStep.EMAIL
+            currentUserInfoStep = UserInfoStep.EMAIL,
+            currency = CurrencyInfo("INR","₹")
         ),
         onAmountChange = {_, _ ->},
         onNextStep = {},
