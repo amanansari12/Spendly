@@ -12,10 +12,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.amanansari.spendly.home.screen.HomeScreen
 import com.amanansari.spendly.model.ExpIncCategory
+import com.amanansari.spendly.navigation.route.AddTransaction
 import com.amanansari.spendly.navigation.route.Home
 import com.amanansari.spendly.navigation.route.Analytics
 import com.amanansari.spendly.navigation.route.Budget
 import com.amanansari.spendly.navigation.route.Profile
+import com.amanansari.spendly.transaction.screen.AddTransactionScreen
+
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainNavGraph(
@@ -36,6 +39,15 @@ fun MainNavGraph(
                     }
              )
          }
+
+        composable<AddTransaction> {
+            AddTransactionScreen(
+                onClose = {
+                    navController.popBackStack()
+                }
+            )
+            
+        }
 
         composable<Budget> {
             Text("Budget screen — coming soon")

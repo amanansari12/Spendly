@@ -38,22 +38,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.amanansari.spendly.model.ExpIncCategory
-import com.amanansari.spendly.navigation.AppNavigation
-import com.amanansari.spendly.navigation.BottomBarItem
 import com.amanansari.spendly.navigation.bottomBarItems
 import com.amanansari.spendly.navigation.graph.MainNavGraph
-import com.amanansari.spendly.navigation.route.Analytics
-import com.amanansari.spendly.navigation.route.Budget
+import com.amanansari.spendly.navigation.route.AddTransaction
 import com.amanansari.spendly.navigation.route.Home
-import com.amanansari.spendly.navigation.route.Profile
 import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModel
-import com.amanansari.spendly.transaction.screen.AddTxScreen
-import com.amanansari.spendly.ui.theme.LightBg
 import com.amanansari.spendly.ui.theme.LightNavInactive
 import com.amanansari.spendly.ui.theme.LightSurface
 import com.amanansari.spendly.ui.theme.Primary
@@ -67,9 +59,6 @@ fun MainScreen(onboardingViewModel: OnboardingViewModel){
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val sheetState = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
-    var showBottomSheet by remember { mutableStateOf(false) }
     var selectedCategory  by remember { mutableStateOf< ExpIncCategory?>(null) }
     var selectedDate by remember { mutableStateOf<Long?>(System.currentTimeMillis()) }
 
@@ -92,10 +81,7 @@ fun MainScreen(onboardingViewModel: OnboardingViewModel){
             if(currentRoute == Home::class.qualifiedName){
                 FloatingActionBtn(
                     onClick = {
-                        showBottomSheet = true
-                        if(selectedDate == null){
-                            selectedDate = System.currentTimeMillis()
-                        }
+                        navController.navigate(AddTransaction)
                     }
                 )
             }
@@ -110,17 +96,11 @@ fun MainScreen(onboardingViewModel: OnboardingViewModel){
             paddingValues = paddingValues,
             onCategorySelected = {
                 selectedCategory = it
-                showBottomSheet = true
+                navController.navigate(AddTransaction)
             }
         )
 
-        AddTxScreen(showBottomSheet,
-            onClick = { showBottomSheet = false},
-            selectedCategory = selectedCategory,
-            onCategoryChange = { category -> selectedCategory = category },
-            selectedDate = selectedDate,
-            onDateChange = {selectedDate = it}
-        )
+
 
     }
 
