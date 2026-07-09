@@ -10,3 +10,6 @@ object InitialBudget
 
 @Serializable
 object InitialBudgetAllocation
+
+@Serializable
+object IncomeSource

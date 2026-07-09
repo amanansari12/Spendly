@@ -25,7 +25,7 @@ import com.amanansari.spendly.ui.theme.LightTextSecondary
 
 @Composable
 fun CategoryIconBox(
-    category: ExpIncCategory.ExpenseCategory,
+    category: ExpIncCategory,
     isSelected: Boolean = false,
     onClick: (() -> Unit)? = null
 ) {

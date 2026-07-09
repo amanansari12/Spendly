@@ -18,7 +18,9 @@ import com.amanansari.spendly.navigation.AppNavigation
 import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModel
 import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModelFactory
 import com.amanansari.spendly.ui.theme.SpendlyTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     //TODO: Migrate to the Hilt, which does not require us to write viewModel factory
@@ -37,6 +39,7 @@ class MainActivity : ComponentActivity() {
             database,
             database.userDao(),
             database.monthlyBudgetDao(),
+            database.transactionDao(),
             database.budgetAllocationDao(),
             dataStoreManager)
 

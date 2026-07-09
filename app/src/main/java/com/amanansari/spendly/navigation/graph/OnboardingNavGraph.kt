@@ -14,11 +14,14 @@ import androidx.navigation.compose.composable
 import com.amanansari.spendly.navigation.route.InitialBudget
 import com.amanansari.spendly.navigation.route.InitialBudgetAllocation
 import com.amanansari.spendly.navigation.route.UserInfo
+import com.amanansari.spendly.navigation.route.IncomeSource
+import com.amanansari.spendly.onBoarding.screen.IncomeSourceScreen
 import com.amanansari.spendly.onBoarding.screen.InitialBudgetAllocationScreen
 import com.amanansari.spendly.onBoarding.screen.InitialBudgetScreen
 import com.amanansari.spendly.onBoarding.screen.UserInfoScreen
 import com.amanansari.spendly.onBoarding.state.BudgetAllocationUiState
 import com.amanansari.spendly.onBoarding.state.UserInfoUiState
+import com.amanansari.spendly.onBoarding.state.IncomeSourceUistate
 import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -39,7 +42,8 @@ fun OnboardingNavGraph(
                 name = onboardingViewModel.name,
                 email = onboardingViewModel.email,
                 initialAmount = onboardingViewModel.initialAmount,
-                currentUserInfoStep = onboardingViewModel.userInfoStep
+                currentUserInfoStep = onboardingViewModel.userInfoStep,
+                currency = onboardingViewModel.currency
             )
             UserInfoScreen(
                 state = state,
@@ -60,7 +64,8 @@ fun OnboardingNavGraph(
                 email = onboardingViewModel.email,
                 initialAmount = onboardingViewModel.initialAmount,
                 amountFieldValue = onboardingViewModel.amountFieldValue,
-                currentUserInfoStep = onboardingViewModel.userInfoStep
+                currentUserInfoStep = onboardingViewModel.userInfoStep,
+                currency = onboardingViewModel.currency
             )
 
             BackHandler() {
@@ -75,7 +80,7 @@ fun OnboardingNavGraph(
                                  },
                 onNextStep = {
                     if (onboardingViewModel.completeAddBudgetStep()) {
-                        navController.navigate(InitialBudgetAllocation)
+                        navController.navigate(IncomeSource)
                     }
                 },
                 onPrevStep = {
@@ -84,6 +89,38 @@ fun OnboardingNavGraph(
 
                 }
             )
+        }
+
+        composable<IncomeSource> {
+
+            val state = IncomeSourceUistate(
+                availableIncomeSource = onboardingViewModel.availableIncomeSource,
+                selectedIncomeSourceId =onboardingViewModel.selectedIncomeSourceId
+            )
+
+            BackHandler() {
+                onboardingViewModel.resetIncomeSelection()
+                navController.popBackStack()
+            }
+
+            IncomeSourceScreen(
+                state = state,
+                onContinue = {
+                    if (onboardingViewModel.completeIncomeSourceStep()) {
+                    navController.navigate(InitialBudgetAllocation)
+                    }},
+                onSkip = {
+                    onboardingViewModel.resetIncomeSelection()
+                    navController.navigate(InitialBudgetAllocation)
+                },
+                onIncomeToggle = {onboardingViewModel.toggleIncome(it)},
+                onPrevStep = {
+                    onboardingViewModel.resetIncomeSelection()
+                    navController.popBackStack()
+
+                }
+            )
+
         }
 
         composable<InitialBudgetAllocation> {
@@ -124,6 +161,7 @@ fun OnboardingNavGraph(
                     navController.popBackStack()
 
                 },
+
             ) { onboardingViewModel.completeOnboardingStep() }
         }
     }

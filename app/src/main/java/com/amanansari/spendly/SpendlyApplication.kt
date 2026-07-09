@@ -12,7 +12,9 @@ import kotlinx.coroutines.launch
 import com.amanansari.spendly.data.local.db.SpendlyDatabase
 import com.amanansari.spendly.data.local.preferences.DataStoreManager
 import com.amanansari.spendly.data.repository.OnboardingRepository
+import dagger.hilt.android.HiltAndroidApp
 
+@HiltAndroidApp
 class SpendlyApplication : Application() {
 
     // 1. A place to catch any crash that happens inside our background work,
