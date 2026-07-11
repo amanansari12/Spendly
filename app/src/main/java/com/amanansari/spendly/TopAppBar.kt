@@ -1,5 +1,7 @@
 package com.amanansari.spendly
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,18 +39,24 @@ import com.amanansari.spendly.ui.theme.LightTextSecondary
 import com.amanansari.spendly.ui.theme.LightTintedBg
 import com.amanansari.spendly.ui.theme.Primary
 import androidx.compose.runtime.collectAsState
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.ViewModelStoreOwner
+import com.amanansari.spendly.home.viewmodel.HomeViewModel
 import com.amanansari.spendly.navigation.BottomBarItem
 import com.amanansari.spendly.navigation.route.Analytics
 import com.amanansari.spendly.navigation.route.Home
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TopBar(navController: NavController, onboardingViewModel: OnboardingViewModel) {
+fun TopBar(navController: NavController,
+           homeViewModel: HomeViewModel = hiltViewModel()
+) {
 
     // 1. Observe the current route
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     when(currentRoute){
-        Home::class.qualifiedName -> HomeTopBar(onboardingViewModel)
+        Home::class.qualifiedName -> HomeTopBar(homeViewModel)
         Analytics::class.qualifiedName -> AnalyticsTopBar()
 
     }
@@ -57,12 +65,13 @@ fun TopBar(navController: NavController, onboardingViewModel: OnboardingViewMode
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HomeTopBar(onboardingViewModel: OnboardingViewModel){
+fun HomeTopBar(homeViewModel: HomeViewModel){
 
-    val user by onboardingViewModel.user.collectAsState()
+    val state = homeViewModel.uiState.collectAsState()
 
-    val firstname = user?.name?.trim()?.split(" ")?.firstOrNull() ?: "User"
+    val firstname = state.value.userName
 
     Row(
         modifier = Modifier
@@ -116,7 +125,7 @@ fun HomeTopBar(onboardingViewModel: OnboardingViewModel){
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = getInitials("Aman Ansari"),
+                    text = getInitials(firstname),
                     color = DarkOverlay,
                     fontWeight = FontWeight.Bold
                 )

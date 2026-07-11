@@ -10,8 +10,11 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.amanansari.spendly.home.screen.HomeScreen
+import com.amanansari.spendly.home.viewmodel.HomeViewModel
 import com.amanansari.spendly.model.ExpIncCategory
+import com.amanansari.spendly.model.categoryFromId
 import com.amanansari.spendly.navigation.route.AddTransaction
 import com.amanansari.spendly.navigation.route.Home
 import com.amanansari.spendly.navigation.route.Analytics
@@ -24,7 +27,7 @@ import com.amanansari.spendly.transaction.screen.AddTransactionScreen
 fun MainNavGraph(
     navController: NavHostController,
     paddingValues: PaddingValues,
-    onCategorySelected: (ExpIncCategory) -> Unit
+    onCategorySelected: (ExpIncCategory) -> Unit,
 ) {
 
     NavHost(
@@ -34,17 +37,22 @@ fun MainNavGraph(
     ) {
 
         composable<Home>{
-             HomeScreen(onClickSheet = { category ->
-                        onCategorySelected(category)
+             HomeScreen(onQuickSelect = { category ->
+                        navController.navigate(AddTransaction(category.id))
                     }
              )
          }
 
-        composable<AddTransaction> {
+        composable<AddTransaction> { backstackEntry ->
+
+            val args = backstackEntry.toRoute<AddTransaction>()
             AddTransactionScreen(
                 onClose = {
                     navController.popBackStack()
-                }
+                },
+
+                quickSelectedCategoryId = args.categoryId
+
             )
             
         }

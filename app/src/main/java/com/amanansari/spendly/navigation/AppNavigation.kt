@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.amanansari.spendly.MainScreen
+import com.amanansari.spendly.home.viewmodel.HomeViewModel
 import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.navigation.graph.MainNavGraph
 import com.amanansari.spendly.navigation.graph.OnboardingNavGraph
@@ -18,7 +19,7 @@ import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModel
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation(
-    onboardingViewModel: OnboardingViewModel,
+    onboardingViewModel: OnboardingViewModel
 ) {
 
     val isOnboardingCompletedState by onboardingViewModel.isOnboardingCompleted.collectAsState()
@@ -30,7 +31,9 @@ fun AppNavigation(
 
     if (isOnboardingCompleted == true) {
 
-        MainScreen(onboardingViewModel)
+
+
+        MainScreen()
 
     } else {
 

@@ -36,10 +36,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.amanansari.spendly.home.viewmodel.HomeViewModel
 import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.navigation.bottomBarItems
 import com.amanansari.spendly.navigation.graph.MainNavGraph
@@ -54,7 +56,7 @@ import com.amanansari.spendly.ui.theme.SpendlyTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MainScreen(onboardingViewModel: OnboardingViewModel){
+fun MainScreen(){
 
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -70,7 +72,7 @@ fun MainScreen(onboardingViewModel: OnboardingViewModel){
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = Color.White,
-        topBar = {TopBar(navController, onboardingViewModel)},
+        topBar = {TopBar(navController)},
         bottomBar = {
             if(currentRoute in bottomBarRoutes){
                 BottomNavBar(navController)
@@ -81,7 +83,7 @@ fun MainScreen(onboardingViewModel: OnboardingViewModel){
             if(currentRoute == Home::class.qualifiedName){
                 FloatingActionBtn(
                     onClick = {
-                        navController.navigate(AddTransaction)
+                        navController.navigate(AddTransaction())
                     }
                 )
             }
@@ -97,7 +99,7 @@ fun MainScreen(onboardingViewModel: OnboardingViewModel){
             onCategorySelected = {
                 selectedCategory = it
                 navController.navigate(AddTransaction)
-            }
+            },
         )
 
 

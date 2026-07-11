@@ -43,11 +43,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,7 +62,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.amanansari.spendly.components.CategoryIconBox
+import com.amanansari.spendly.home.state.HomeUiState
+import com.amanansari.spendly.home.viewmodel.HomeViewModel
 import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.model.allExpenseCategories
 import com.amanansari.spendly.ui.theme.BrightGray
@@ -79,30 +80,70 @@ import com.amanansari.spendly.ui.theme.PrimaryDark
 import com.amanansari.spendly.ui.theme.PrimaryLight
 import com.amanansari.spendly.ui.theme.SpendlyTheme
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import androidx.compose.ui.platform.LocalLocale
+import com.amanansari.spendly.data.local.entity.TransactionEntity
+import com.amanansari.spendly.data.local.entity.TransactionType
+import com.amanansari.spendly.model.categoryFromId
+import com.amanansari.spendly.utils.formatTransactionTime
+import com.amanansari.spendly.utils.toCurrencyString
+import java.time.ZoneId
+import java.time.Instant
+import java.util.UUID
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
+fun HomeScreen(
+    onQuickSelect: (ExpIncCategory.ExpenseCategory) -> Unit,
+    homeViewModel: HomeViewModel = hiltViewModel()
+) {
+    val state by homeViewModel.uiState.collectAsState()
+
+    HomeScreenContent(
+        state = state,
+        onQuickSelect = onQuickSelect,
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun HomeScreenContent(
+    state: HomeUiState,
+    onQuickSelect: (ExpIncCategory.ExpenseCategory) -> Unit,
+
+) {
+
 
 
     val isTransaction = false
-
-    val currentDate = LocalDate.now()
-    val formatter = DateTimeFormatter.ofPattern("MMMM yyyy")
-    val formattedDate = currentDate.format(formatter)
-
-    var quickSelectedCategory by remember { mutableStateOf< ExpIncCategory.ExpenseCategory?>(null) }
     val context = LocalContext.current
 
-    val unAllocatedAmount = remember { mutableIntStateOf(0) }
-    val totalIncome = remember { mutableIntStateOf(30000) }
-    val currency = remember { mutableStateOf("$") }
-    val currentMonthIncome = remember { mutableIntStateOf(28000) }
-    val surplus = remember { mutableIntStateOf(2500) }
-    val exp = 8500
-    val remain = 4000
+
+    val currentDate = LocalDate.now()
+    val formatter = DateTimeFormatter.ofPattern("MMM yyyy")
+    val currentMonthYear = currentDate.format(formatter)
+
+
+    val budgetAvailableToSpent = ((state.totalAllocatedAmount - state.amountSpentFromAllocated) / 100).toDouble().toCurrencyString(state.defaultCurrency)
+    val totalBalanceForMonth = ((state.totalIncome + state.openingBalance)/100).toDouble().toCurrencyString(state.defaultCurrency)
+    val totalAllocatedAmount = (state.totalAllocatedAmount/100).toDouble().toCurrencyString(state.defaultCurrency)
+    val amountSpentFromAllocated = (state.amountSpentFromAllocated/100).toDouble().toCurrencyString(state.defaultCurrency)
+    val unAllocatedAmount = ((state.totalIncome + state.openingBalance - state.totalAllocatedAmount)/100).toDouble().toCurrencyString(state.defaultCurrency)
+
+    val budgetStatusColor = when {
+        state.budgetUsedPercentage >= 100f -> ExpenseRed
+        state.budgetUsedPercentage >= 75f -> Color(0xFFFFDB58) // same amber as the unallocated warning
+        else -> LightSurface
+    }
+
+
+    val surplusMonth: String? = state.carriedFromMonth
+        .let { runCatching { YearMonth.parse(it) }.getOrNull() }
+        ?.month
+        ?.getDisplayName(TextStyle.FULL, LocalLocale.current.platformLocale)
 
     LazyColumn(
             modifier = Modifier
@@ -162,7 +203,7 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                                     modifier = Modifier.fillMaxWidth()
                                 ){
                                     Text(
-                                        text = "TOTAL BALANCE",
+                                        text = "AVAILABLE TO SPEND",
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = LightGray
@@ -181,11 +222,13 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                                             imageVector = Icons.Default.CalendarMonth,
                                             contentDescription = null,
                                             tint = BrightGray,
-                                            modifier = Modifier.size(14.dp).padding(end = 2.dp)
+                                            modifier = Modifier
+                                                .size(14.dp)
+                                                .padding(end = 2.dp)
                                         )
 
                                         Text(
-                                            text = formattedDate,
+                                            text = currentMonthYear,
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = BrightGray,
@@ -195,27 +238,35 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                                 }
 
                                 Text(
-                                    text = "$12,480.00",
+                                    text = budgetAvailableToSpent,
                                     style = MaterialTheme.typography.headlineLarge,
                                     color = LightSurface,
                                     fontWeight = FontWeight.Bold
                                 )
 
                                 Text(
-                                    text = "Available to Spend this Month",
+                                    text = "of $totalAllocatedAmount this Month",
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = LightGray
                                 )
 
-                                if(true){
+                                if(state.isUnAllocatedAmountLeft){
+
+                                    val isOverspentWithUnallocated = state.budgetUsedPercentage >= 100f
 
                                     Row(
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(40))
-                                            .background(color = Color.Red.copy(alpha = 0.14f))
+                                            .background(color = if (isOverspentWithUnallocated)
+                                                ExpenseRed.copy(alpha = 0.22f)
+                                            else
+                                                Color.Red.copy(alpha = 0.14f))
+                                            .clickable {
+                                                Toast.makeText(context, "Unallocated Amount Clicked", Toast.LENGTH_SHORT).show()
+                                            }
                                             .padding(horizontal = 6.dp)
 
                                     ) {
@@ -223,14 +274,19 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                                         Icon(
                                             imageVector = Icons.Default.WarningAmber,
                                             contentDescription = null,
-                                            tint = Color(0xFFFFDB58),
-                                            modifier = Modifier.size(14.dp).padding(end = 2.dp)
+                                            tint = if (isOverspentWithUnallocated) ExpenseRed else Color(0xFFFFDB58),
+                                            modifier = Modifier
+                                                .size(14.dp)
+                                                .padding(end = 2.dp)
                                         )
 
 
                                         Text(
-                                            text = "$${unAllocatedAmount.value} Unallocated - Tap to Assign",
-                                            fontSize = 12.sp,
+                                            text = if (isOverspentWithUnallocated)
+                                                "$unAllocatedAmount Unassigned — Reassign to Cover Overspend"
+                                            else
+                                                "$unAllocatedAmount Unallocated - Tap to Assign",
+                                            fontSize = if (isOverspentWithUnallocated) 10.sp else 12.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = LightSurface,
                                             modifier = Modifier.clickable{
@@ -252,8 +308,8 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(20))
-                                    .background(Color.White.copy(alpha = 0.15f)).
-                                    padding(12.dp),
+                                    .background(Color.White.copy(alpha = 0.15f))
+                                    .padding(12.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
                             ){
@@ -273,7 +329,9 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                                             imageVector = Icons.Default.AccountBalanceWallet,
                                             contentDescription = null,
                                             tint = IncomeGreen,
-                                            modifier = Modifier.size(15.dp).padding(end = 2.dp)
+                                            modifier = Modifier
+                                                .size(15.dp)
+                                                .padding(end = 2.dp)
                                         )
 
                                         Text(
@@ -285,7 +343,7 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                                     }
 
                                     Text(
-                                        text = "+${currency.value} ${totalIncome.value}",
+                                        text = "+$totalBalanceForMonth",
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = IncomeGreen
@@ -295,7 +353,9 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
 
 
                                 Row(
-                                    modifier = Modifier.fillMaxWidth().padding(4.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(4.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ){
                                     Column(
@@ -317,7 +377,9 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                                                 imageVector = Icons.Default.Payments,
                                                 contentDescription = null,
                                                 tint = LightGray,
-                                                modifier = Modifier.size(12.dp).padding(end = 2.dp)
+                                                modifier = Modifier
+                                                    .size(12.dp)
+                                                    .padding(end = 2.dp)
                                             )
 
                                             Text(
@@ -329,14 +391,14 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                                         }
 
                                         Text(
-                                            text = "${currency.value} ${currentMonthIncome.value}",
+                                            text = (state.totalIncome/100).toDouble().toCurrencyString(state.defaultCurrency),
                                             fontSize = 15.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = LightSurface
                                         )
 
                                         Text(
-                                            text = "Salary Aug 1",
+                                            text = "",
                                             fontSize = 8.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = LightGray
@@ -369,7 +431,9 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                                                 imageVector = Icons.Default.SouthWest,
                                                 contentDescription = null,
                                                 tint = IncomeGreen,
-                                                modifier = Modifier.size(12.dp).padding(end = 2.dp)
+                                                modifier = Modifier
+                                                    .size(12.dp)
+                                                    .padding(end = 2.dp)
                                             )
 
                                             Text(
@@ -381,14 +445,14 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                                         }
 
                                         Text(
-                                            text = "+ ${currency.value}${currentMonthIncome.intValue}",
+                                            text = "+" + (state.openingBalance/100).toDouble().toCurrencyString(state.defaultCurrency),
                                             fontSize = 15.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = IncomeGreen
                                         )
 
                                         Text(
-                                            text = "July Surplus",
+                                            text = surplusMonth?.let { "$it surplus" } ?: "No carryover",
                                             fontSize = 8.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = LightGray
@@ -428,7 +492,7 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                                         Spacer(modifier = Modifier.width(4.dp))
 
                                         Text(
-                                            text = "-$28,000",
+                                            text = "-$amountSpentFromAllocated",
                                             fontSize = 20.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = LightSurface
@@ -441,7 +505,7 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                                     horizontalAlignment = Alignment.End
                                 ) {
                                     Text(
-                                        text = "REMAINING",
+                                        text = "ALLOCATED",
                                         fontSize = 12.sp,
                                         color = LightGray
                                     )
@@ -456,7 +520,7 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                                         Spacer(modifier = Modifier.width(4.dp))
 
                                         Text(
-                                            text = "+$28,000",
+                                            text = "+$totalAllocatedAmount",
                                             fontSize = 20.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = IncomeGreen
@@ -465,86 +529,50 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                                 }
                             }
 
+                            Spacer(modifier = Modifier.height(5.dp))
+
+                            Column(
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "Budget Used",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp,
+                                        color = LightGray
+                                    )
+
+                                    Text(
+                                        text = "${"%.1f".format(state.budgetUsedPercentage)}%",
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = budgetStatusColor,
+                                        fontSize = 12.sp,
+                                    )
+                                }
+
+                                LinearProgressIndicator(
+                                    progress = { (state.budgetUsedPercentage / 100f).coerceIn(0f, 1f) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 2.dp, bottom = 10.dp)
+                                        .height(9.dp)
+                                        .clip(RoundedCornerShape(50)),
+                                    color = budgetStatusColor,
+                                    trackColor = LightNavInactive,
+                                    strokeCap = StrokeCap.Butt, // Natively rounds the ends of the progress bar
+                                    gapSize = 0.dp, // Removes the Material 3 gap
+                                    drawStopIndicator = {} // Removes the Material 3 stop indicator
+                                )
+
+                            }
+
                         }
                     }
                 }
 
 
-            }
-
-            //? Budget Information Card
-            item {
-                Column(
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Budget Used",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Text(
-                            text = "68%",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = PrimaryDark
-                        )
-                    }
-
-                    LinearProgressIndicator(
-                        progress = { 0.68f },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 10.dp)
-                            .height(9.dp)
-                            .clip(RoundedCornerShape(50)),
-                        color = Primary,
-                        trackColor = LightNavInactive,
-                        strokeCap = StrokeCap.Butt, // Natively rounds the ends of the progress bar
-                        gapSize = 0.dp, // Removes the Material 3 gap
-                        drawStopIndicator = {} // Removes the Material 3 stop indicator
-                    )
-
-
-                    // ? How Much Budget Used and Left.
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-
-                        Text(
-                            text = buildAnnotatedString {
-                                withStyle(
-                                    style = SpanStyle(
-                                        color = LightTextSecondary,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                ) {
-                                    append("$$exp ")
-                                }
-                                append(" of ")
-
-                                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                    append("$${totalIncome.value}")
-                                }
-
-                            },
-                            fontSize = 14.sp,
-                        )
-
-                        Text(
-                            text = "$$remain left",
-                            fontSize = 14.sp,
-                            color = IncomeGreen,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-
-                }
             }
 
             //? Daily Expense
@@ -557,7 +585,7 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "Today's Expense",
+                            text = "Recent Transaction",
                             fontWeight = FontWeight.Bold
                         )
 
@@ -578,8 +606,27 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
 
 
             //? Daily Transactions Shown If Transaction is Done
-            if(isTransaction){
-                items(5) {
+            if(state.isTransaction){
+                items(
+                    items = state.recentTransaction,
+                    key = { it.transactionId }
+                ) { transaction ->
+
+                    val category = categoryFromId(transaction.categoryId)
+
+                    val isIncome = transaction.type == TransactionType.INCOME
+
+                    val displayCategory = category
+                        ?: if (isIncome) ExpIncCategory.IncomeCategory.Other else ExpIncCategory.ExpenseCategory.Misc
+
+
+                    val formattedAmount = (transaction.amount / 100.0)
+                        .toCurrencyString(transaction.currencyCode)
+
+
+
+                    val categoryTitle = category?.title
+                        ?: if (transaction.type == TransactionType.INCOME) "Income" else "Uncategorized"
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -601,16 +648,16 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                 // TODO: Make Changes in This,
                                 // TODO: Make the Create Separate Code for Viewing Icon here
-                                CategoryIconBox(category = ExpIncCategory.ExpenseCategory.Food, isSelected = false, onClick = {  })
+                                CategoryIconBox(category = displayCategory, isSelected = false, onClick = {  })
 
                                 Column {
                                     Text(
-                                        text = "Burger King",
+                                        text = transaction.note?.takeIf { it.isNotBlank() } ?: categoryTitle,
                                         fontWeight = FontWeight.Bold
                                     )
 
                                     Text(
-                                        text = "Food" + "12:45 PM",
+                                        text = "$categoryTitle • ${formatTransactionTime(transaction.occurredAt)}",
                                         fontSize = 10.sp
                                     )
                                 }
@@ -618,8 +665,9 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
 
 
                             Text(
-                                text = "-$450",
-                                fontWeight = FontWeight.Bold
+                                text = if (isIncome) "+$formattedAmount" else "-$formattedAmount",
+                                fontWeight = FontWeight.Bold,
+                                color = if (isIncome) IncomeGreen else ExpenseRed
                             )
                         }
                     }
@@ -724,10 +772,10 @@ fun HomeScreen(onClickSheet : (ExpIncCategory.ExpenseCategory) -> Unit) {
                             ){
                                 CategoryIconBox(
                                     category = category,
-                                    isSelected = category == quickSelectedCategory,
+                                    isSelected = false,//category == quickSelectedCategory,
                                     onClick = {
-                                        quickSelectedCategory = category
-                                        onClickSheet(category)
+                                        // quickSelectedCategory = category
+                                        onQuickSelect(category)
 
                                     }
                                 )
@@ -765,7 +813,73 @@ fun getInitials(name : String) : String {
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
+
+    val now = LocalDate.now() // 2026-07-11
+
+    fun epochAt(date: LocalDate, hour: Int = 14, minute: Int = 45): Long =
+        date.atTime(hour, minute)
+            .atZone(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+
+    val dummyTimestamps = listOf(
+        epochAt(now),                    // Today       -> "2:45 PM"
+        epochAt(now.minusDays(1)),       // Yesterday   -> "Yesterday"
+        epochAt(now.minusDays(3)),       // 3 days ago  -> "3 days ago"
+        epochAt(now.minusDays(6)),       // 6 days ago  -> "6 days ago"
+        epochAt(LocalDate.of(2026, 6, 6)), // Same year -> "6 June"
+        epochAt(LocalDate.of(2025, 12, 25)) // Prior year -> "25 December 2025"
+    )
+
+    val previewState = HomeUiState(
+        userName = "Aman",
+        defaultCurrency = "INR",
+        openingBalance = 5_000_00L,
+        totalIncome = 25_000_00L,
+        totalAllocatedAmount = 20_000_00L,
+        amountSpentFromAllocated = 20_000_00L,
+        closingBalance = 21_500_00L,
+        carriedFromMonth = "2026-06",
+        recentTransaction = listOf(
+            TransactionEntity(
+                userId = UUID.randomUUID(),
+                categoryId = "food",
+                type = TransactionType.EXPENSE,
+                currencyCode = "INR",
+                amount = 450_00L,
+                occurredAt = epochAt(now),
+                monthKey = "2026-07",
+                note = "Lunch"
+            ),
+            TransactionEntity(
+                userId = UUID.randomUUID(),
+                categoryId = "transport",
+                type = TransactionType.EXPENSE,
+                currencyCode = "INR",
+                amount = 4020_00L,
+                occurredAt = epochAt(now.minusDays(1)),
+                monthKey = "2026-07",
+                note = "Metro"
+            ),
+            TransactionEntity(
+                userId = UUID.randomUUID(),
+                categoryId = "salary",
+                type = TransactionType.INCOME,
+                currencyCode = "INR",
+                amount = 25_000_00L,
+                occurredAt = epochAt(now.minusDays(7)),
+                monthKey = "2026-07",
+                note = "Salary"
+            )
+        )
+    )
+
     SpendlyTheme {
-        HomeScreen(onClickSheet = {})
+        HomeScreenContent(
+            state = previewState
+        ) {
+
+        }
     }
 }
+

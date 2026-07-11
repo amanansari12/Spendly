@@ -8,17 +8,19 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.amanansari.spendly.data.local.db.DatabaseProvider
 import com.amanansari.spendly.data.local.preferences.DataStoreManager
-import com.amanansari.spendly.data.repository.BudgetRepository
 import com.amanansari.spendly.data.repository.OnboardingRepository
 import com.amanansari.spendly.data.repository.UserRepository
+import com.amanansari.spendly.home.viewmodel.HomeViewModel
 import com.amanansari.spendly.navigation.AppNavigation
 import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModel
 import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModelFactory
 import com.amanansari.spendly.ui.theme.SpendlyTheme
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.lifecycle.HiltViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -38,7 +40,7 @@ class MainActivity : ComponentActivity() {
         val onboardingRepository = OnboardingRepository(
             database,
             database.userDao(),
-            database.monthlyBudgetDao(),
+            database.budgetDao(),
             database.transactionDao(),
             database.budgetAllocationDao(),
             dataStoreManager)

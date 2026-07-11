@@ -35,6 +35,7 @@ data class BudgetAllocationEntity(
     val monthKey: String,
     val categoryId : String,
     val allocatedAmount : Long,
+    val amountSpent : Long,
     val isCustomised : Boolean,
     val createdAt : Long = System.currentTimeMillis(),
     val updatedAt : Long = System.currentTimeMillis(),

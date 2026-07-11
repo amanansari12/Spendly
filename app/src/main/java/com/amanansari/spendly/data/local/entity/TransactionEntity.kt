@@ -6,6 +6,11 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
 
+
+enum class TransactionType {
+    INCOME, EXPENSE
+}
+
 @Entity(
     tableName = "transactions",
     foreignKeys = [
@@ -27,7 +32,8 @@ import java.util.UUID
         Index("categoryId"),
         Index(value = ["userId", "occurredAt"]),
         Index(value = ["userId", "monthKey"]),  // supports "transaction history sorted by month" per user
-        Index(value = ["userId", "type"])        // supports "show only income" / "show only expenses" filters
+        Index(value = ["userId", "type"]),    // supports "show only income" / "show only expenses" filters
+        Index(value = ["userId", "isDeleted"])
     ]
 )
 data class TransactionEntity(
@@ -36,13 +42,13 @@ data class TransactionEntity(
 
     val userId: UUID, //? we will be using the UUID for this
     val categoryId: String,
-    val type: String,
+    val type: TransactionType,
     val currencyCode : String, //? Supports Future Multi-Currency use
     val amount : Long,
     val occurredAt: Long,     // NEW — the actual transaction date, epoch millis. THIS drives all filtering.
     val monthKey : String,  // "2026-07"
     val note: String?,
-//    val occurredAt: Long = System.currentTimeMillis(),// ? Not needed right-now
+    val isDeleted: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val rowVersion: Int = 1, //? use for sync

@@ -84,4 +84,4 @@ val allIncomeCategories = listOf(
 private val categoryById: Map<String, ExpIncCategory> =
     (allIncomeCategories + allExpenseCategories).associateBy { it.id }
 
-fun categoryFromId(id: String) : ExpIncCategory? = categoryById[id]
+fun categoryFromId(id: String?) : ExpIncCategory? = categoryById[id]
