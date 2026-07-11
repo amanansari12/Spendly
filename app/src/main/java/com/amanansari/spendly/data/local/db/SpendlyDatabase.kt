@@ -3,6 +3,7 @@ package com.amanansari.spendly.data.local.db
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.amanansari.spendly.data.local.converters.TransactionTypeConverter
 import com.amanansari.spendly.data.local.converters.UUIDConverters
 import com.amanansari.spendly.data.local.dao.BudgetAllocationDao
 import com.amanansari.spendly.data.local.dao.CategoryDao
@@ -21,13 +22,13 @@ import com.amanansari.spendly.data.local.entity.UserEntity
         CategoryEntity::class,
         BudgetAllocationEntity::class,
         TransactionEntity::class],
-    version = 6,
+    version = 9,
     exportSchema = false
 )
-@TypeConverters(UUIDConverters::class)
+@TypeConverters(UUIDConverters::class, TransactionTypeConverter::class)
 abstract class SpendlyDatabase : RoomDatabase(){
     abstract fun userDao() : UserDao
-    abstract fun monthlyBudgetDao() : BudgetDao
+    abstract fun budgetDao() : BudgetDao
     abstract fun categoryDao() : CategoryDao
     abstract fun budgetAllocationDao() : BudgetAllocationDao
     abstract fun transactionDao(): TransactionDao

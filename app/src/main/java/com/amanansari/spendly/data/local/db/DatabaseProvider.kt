@@ -16,7 +16,7 @@ object DatabaseProvider {
                 context.applicationContext,
                 SpendlyDatabase::class.java,
                 "SpendlyDatabase"
-            ).build()
+            ).fallbackToDestructiveMigration(dropAllTables = true) .build()
 
             INSTANCE = instance
 

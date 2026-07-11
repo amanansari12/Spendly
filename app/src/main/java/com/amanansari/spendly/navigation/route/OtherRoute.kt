@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-object AddTransaction{
+data class AddTransaction(val categoryId : String? = null){
 }
 
 @Serializable

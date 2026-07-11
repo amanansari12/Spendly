@@ -12,6 +12,7 @@ import com.amanansari.spendly.data.local.db.SpendlyDatabase
 import com.amanansari.spendly.data.local.entity.BudgetAllocationEntity
 import com.amanansari.spendly.data.local.entity.BudgetEntity
 import com.amanansari.spendly.data.local.entity.TransactionEntity
+import com.amanansari.spendly.data.local.entity.TransactionType
 import com.amanansari.spendly.data.local.entity.UserEntity
 import com.amanansari.spendly.data.local.preferences.DataStoreManager
 import com.amanansari.spendly.model.ExpIncCategory
@@ -58,14 +59,16 @@ class OnboardingRepository(
                 monthKey = currentMonthKey,
                 categoryId = row.category.id,
                 allocatedAmount = row.amount.times(100).roundToLong(),
-                isCustomised = row.isCustomised
+                isCustomised = row.isCustomised,
+                amountSpent = 0L,
+
             )
         }
 
         val transaction = TransactionEntity(
             userId = user.userId,
             categoryId = incomeSourceId,
-            type = "INCOME",
+            type = TransactionType.INCOME,
             currencyCode = detectDefaultCurrencyInfo().code,
             amount = initialAmount,
             occurredAt = System.currentTimeMillis(),

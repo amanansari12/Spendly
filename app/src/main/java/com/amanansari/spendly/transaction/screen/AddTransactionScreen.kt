@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import com.amanansari.spendly.components.AddIncomeExpenseCategoryItem
 import com.amanansari.spendly.components.AmountInputField
 import com.amanansari.spendly.model.ExpIncCategory
+import com.amanansari.spendly.model.categoryFromId
 import com.amanansari.spendly.ui.theme.BrightGray
 import com.amanansari.spendly.ui.theme.ExpenseRed
 import com.amanansari.spendly.ui.theme.IncomeGreen
@@ -67,9 +68,11 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun AddTransactionScreen(onClose: ()->Unit){
+fun AddTransactionScreen(
+    onClose: ()->Unit,
+    quickSelectedCategoryId : String? = null){
 
-    var selectedCategory by remember { mutableStateOf<ExpIncCategory?>(null) }
+    var selectedCategory by remember { mutableStateOf<ExpIncCategory?>(categoryFromId(quickSelectedCategoryId)) }
     var selectedDate by remember { mutableStateOf<Long?>(System.currentTimeMillis()) }
 
     val pagerState = rememberPagerState(pageCount = { 2 }) // 0 = Expense, 1 = Income
