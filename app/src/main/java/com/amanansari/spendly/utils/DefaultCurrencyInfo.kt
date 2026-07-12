@@ -1,6 +1,6 @@
 package com.amanansari.spendly.utils
 
-import com.amanansari.spendly.onBoarding.viewmodel.CurrencyInfo
+import com.amanansari.spendly.model.CurrencyInfo
 import java.util.Currency
 import java.util.Locale
 

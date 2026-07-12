@@ -56,26 +56,26 @@ fun AddExpenseScreen(selectedCategory: ExpIncCategory.ExpenseCategory?,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "ENTER AMOUNT",
-                color = LightNavInactive,
+                text = "AMOUNT",
+                color = Color.DarkGray,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            AmountInputField()
+            AmountInputField(ExpenseRed)
 
         }
 
         Column(
-            modifier = Modifier.padding(vertical =  12.dp, horizontal = 16.dp),
+            modifier = Modifier.padding(vertical =  12.dp, horizontal = 10.dp),
             horizontalAlignment = Alignment.Start
         ) {
 
             Text(
                 text = "Category",
-                color = LightNavInactive,
+                color = Color.DarkGray,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )

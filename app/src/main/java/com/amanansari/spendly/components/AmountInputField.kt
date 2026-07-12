@@ -35,7 +35,9 @@ import com.amanansari.spendly.ui.theme.Platinum
 import com.amanansari.spendly.ui.theme.PrimaryDark
 
 @Composable
-fun AmountInputField(){
+fun AmountInputField(
+    colorProvided : Color?
+){
 
     var amount by remember { mutableStateOf(TextFieldValue("")) }
 
@@ -56,7 +58,7 @@ fun AmountInputField(){
                     text = "$",
                     fontWeight = FontWeight.Bold,
                     fontSize = 50.sp,
-                    color = PrimaryDark,
+                    color = colorProvided ?: PrimaryDark,
 
                     )
                 Spacer(Modifier.width(15.dp))
@@ -107,7 +109,7 @@ fun AmountInputField(){
             HorizontalDivider(
                 modifier = Modifier.fillMaxWidth(), // <-- now matches the Row above it exactly
                 thickness = 2.dp,
-                color = PrimaryDark
+                color = colorProvided ?: PrimaryDark
             )
 
 

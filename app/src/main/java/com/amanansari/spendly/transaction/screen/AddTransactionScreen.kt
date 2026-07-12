@@ -1,6 +1,8 @@
 package com.amanansari.spendly.transaction.screen
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -21,7 +24,11 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.rounded.Close
@@ -55,9 +62,11 @@ import com.amanansari.spendly.components.AmountInputField
 import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.model.categoryFromId
 import com.amanansari.spendly.ui.theme.BrightGray
+import com.amanansari.spendly.ui.theme.DarkBorder
 import com.amanansari.spendly.ui.theme.ExpenseRed
 import com.amanansari.spendly.ui.theme.IncomeGreen
 import com.amanansari.spendly.ui.theme.LightBg
+import com.amanansari.spendly.ui.theme.LightGray
 import com.amanansari.spendly.ui.theme.LightNavInactive
 import com.amanansari.spendly.ui.theme.LightSurface
 import com.amanansari.spendly.ui.theme.LightTextSecondary
@@ -82,7 +91,8 @@ fun AddTransactionScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(14.dp)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ){
         ModalTopBar(
             isExpense = isExpense,
@@ -94,6 +104,11 @@ fun AddTransactionScreen(
             }
         )
 
+        TransactionTypeToggle(isExpense, onTypeChanged = {expenseSelected ->
+            scope.launch {
+                pagerState.animateScrollToPage(if (expenseSelected) 0 else 1)
+            }})
+
         HorizontalPager(
             state = pagerState,
             verticalAlignment = Alignment.Top,
@@ -102,6 +117,7 @@ fun AddTransactionScreen(
                 .padding(top = 10.dp)
                 .weight(1f)
         ) { page ->
+
             if (page == 0) {
 
                 AddExpenseScreen(
@@ -120,18 +136,26 @@ fun AddTransactionScreen(
             }
         }
 
+        Spacer(modifier = Modifier.height(12.dp))
+
+        val accent by animateColorAsState(
+            targetValue = if (isExpense) ExpenseRed else IncomeGreen,
+            label = "saveAccent"
+        )
+
         Button(onClick = {  },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Primary // background color
-            ),
+            colors = ButtonDefaults.buttonColors(containerColor = accent),
 
             ) {
+
+            Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Save Transaction",
+                text = if (isExpense) "Save expense" else "Save income",
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
@@ -156,13 +180,13 @@ fun<T : ExpIncCategory> CategoryGrid(
 ) {
 
     LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
+        columns = GridCells.Fixed(2),
         modifier = Modifier
             .fillMaxWidth()
-            .height(220.dp), //? Fixed the height of the Grid to Show only 2 Rows
+            .height(180.dp), //? Fixed the height of the Grid to Show only 2 Rows
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(16.dp)
+        contentPadding = PaddingValues(6.dp)
     ) {
         items(categories) { category ->
 
@@ -292,29 +316,39 @@ fun ModalTopBar(isExpense: Boolean,
         verticalAlignment = Alignment.CenterVertically
     ) {
 
+        Text(
+            text = if (isExpense) "Add Transaction" else "Add Income",
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
+            color = Color.Black
+        )
+
         Box(
             modifier = Modifier
                 .size(40.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(Color.White)
+                .clip(RoundedCornerShape(50))
+                .border(
+                    width = 1.dp,
+                    color = Color.DarkGray,
+                    shape = RoundedCornerShape(50)
+                )
                 .clickable { onCloseClick() },
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Rounded.Close,
                 contentDescription = null,
-                tint = Primary,
-                modifier = Modifier.size(30.dp)
-            )
+                tint = Color.DarkGray,
+                modifier = Modifier.size(35.dp),
+
+                )
         }
 
-        Text(
-            text = if (isExpense) "Add Transaction" else "Add Income",
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
 
-        TransactionTypeToggle(isExpense, onTypeChanged = onTypeChanged)
+
+
+
+
     }
 }
 
@@ -326,43 +360,79 @@ fun TransactionTypeToggle(
     // The outer pill-shaped container
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(50))
-            .background(BrightGray) // Soft, slightly tinted background
-            .padding(1.dp), // Padding creates the gap between the inner button and outer edge
+            .fillMaxWidth()
+            .height(55.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(LightBg) // Soft, slightly tinted background
+            .padding(7.dp), // Padding creates the gap between the inner button and outer edge
         // Border with the primary color
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // Expense Option
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(50))
+                .height(45.dp)
+                .weight(1f)
+                .clip(RoundedCornerShape(12.dp))
                 .background(if (isExpense) ExpenseRed else Color.Transparent) // Or your preferred active expense color
                 .clickable { onTypeChanged(true) }
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "Expense",
-                color = if (isExpense) LightBg else Color.Black,
-                fontWeight = if (!isExpense) FontWeight.Bold else FontWeight.Medium,
-                fontSize = 10.sp
-            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+
+                Icon(
+                    imageVector = Icons.Default.ArrowDownward,
+                    contentDescription = "Expense Button",
+                    tint = if (isExpense) LightSurface else Color.DarkGray,
+                    modifier = Modifier.size(15.dp)
+                )
+
+                Text(
+                    text = "Expense",
+                    color = if (isExpense) LightSurface else Color.DarkGray,
+                    fontWeight = if (!isExpense) FontWeight.ExtraBold else FontWeight.Medium,
+                    fontSize = 15.sp
+                )
+            }
+
         }
         // Income Option
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(50))
+                .height(45.dp)
+                .weight(1f)
+                .clip(RoundedCornerShape(12.dp))
                 .background(if (!isExpense) IncomeGreen else Color.Transparent)
                 .clickable { onTypeChanged(false) }
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "Income",
-                color = if (!isExpense) LightBg else Color.Black,
-                fontWeight = if (!isExpense) FontWeight.Bold else FontWeight.Medium,
-                fontSize = 10.sp
-            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowUpward,
+                    contentDescription = "Income Button",
+                    tint = if (!isExpense) LightSurface else Color.DarkGray,
+                    modifier = Modifier.size(15.dp)
+                )
+
+                Text(
+                    text = "Income",
+                    color = if (!isExpense) LightSurface else Color.DarkGray,
+                    fontWeight = if (!isExpense) FontWeight.Bold else FontWeight.Medium,
+                    fontSize = 15.sp
+                )
+            }
+
         }
     }
 }

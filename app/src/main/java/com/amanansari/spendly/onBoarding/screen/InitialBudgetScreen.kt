@@ -52,8 +52,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.amanansari.spendly.model.CurrencyInfo
 import com.amanansari.spendly.onBoarding.state.UserInfoUiState
-import com.amanansari.spendly.onBoarding.viewmodel.CurrencyInfo
 import com.amanansari.spendly.onBoarding.viewmodel.UserInfoStep
 import com.amanansari.spendly.ui.theme.LightSurface
 import com.amanansari.spendly.ui.theme.Platinum
@@ -350,7 +350,7 @@ fun InitialBudgetScreenPreview(){
             initialAmount = 120000.78,
             amountFieldValue = TextFieldValue("120000.78"),
             currentUserInfoStep = UserInfoStep.EMAIL,
-            currency = CurrencyInfo("INR","₹")
+            currency = CurrencyInfo("INR", "₹")
         ),
         onAmountChange = {_, _ ->},
         onNextStep = {},

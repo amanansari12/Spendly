@@ -2,7 +2,7 @@ package com.amanansari.spendly.onBoarding.state
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.text.input.TextFieldValue
-import com.amanansari.spendly.onBoarding.viewmodel.CurrencyInfo
+import com.amanansari.spendly.model.CurrencyInfo
 import com.amanansari.spendly.onBoarding.viewmodel.UserInfoStep
 
 data class UserInfoUiState(

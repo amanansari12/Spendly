@@ -22,12 +22,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.amanansari.spendly.components.AmountInputField
 import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.model.allIncomeCategories
+import com.amanansari.spendly.ui.theme.IncomeGreen
 import com.amanansari.spendly.ui.theme.LightNavInactive
 import java.math.BigDecimal
 
@@ -52,15 +54,15 @@ fun AddIncomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "ENTER AMOUNT",
-                color = LightNavInactive,
+                text = "AMOUNT",
+                color = Color.DarkGray,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            AmountInputField()
+            AmountInputField(IncomeGreen)
 
         }
 
@@ -71,7 +73,7 @@ fun AddIncomeScreen(
 
             Text(
                 text = "Category",
-                color = LightNavInactive,
+                color = Color.DarkGray,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )

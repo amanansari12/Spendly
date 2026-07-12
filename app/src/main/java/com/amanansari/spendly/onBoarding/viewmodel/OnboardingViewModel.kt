@@ -17,6 +17,7 @@ import com.amanansari.spendly.data.local.preferences.DataStoreManager
 
 import com.amanansari.spendly.data.repository.OnboardingRepository
 import com.amanansari.spendly.data.repository.UserRepository
+import com.amanansari.spendly.model.CurrencyInfo
 import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.model.allExpenseCategories
 import com.amanansari.spendly.model.allIncomeCategories
@@ -35,11 +36,6 @@ enum class UserInfoStep{
     EMAIL
 }
 
-
-data class CurrencyInfo(
-    val code: String,    // "INR" — store this in the DB
-    val symbol: String   // "₹"   — use this for display only
-)
 
 sealed class OnboardingCompletionState {
     object Idle : OnboardingCompletionState()
@@ -91,7 +87,7 @@ class OnboardingViewModel(
         if (name.isNotBlank()) userInfoStep = UserInfoStep.EMAIL
     }
 
-    var currency by mutableStateOf(detectDefaultCurrencyInfo())
+    var currency : CurrencyInfo by mutableStateOf(detectDefaultCurrencyInfo())
         private set
 
     fun completeUserInfoStep(): Boolean = email.isNotBlank()
