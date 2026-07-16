@@ -37,8 +37,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.amanansari.spendly.R
+import com.amanansari.spendly.model.CurrencyInfo
 import com.amanansari.spendly.onBoarding.state.UserInfoUiState
-import com.amanansari.spendly.onBoarding.viewmodel.CurrencyInfo
 import com.amanansari.spendly.onBoarding.viewmodel.UserInfoStep
 import com.amanansari.spendly.ui.theme.LightNavInactive
 import com.amanansari.spendly.ui.theme.LightTextSecondary
@@ -261,9 +261,9 @@ fun UserInfoScreenPreview() {
         state = UserInfoUiState(
             name = "Aman",
             email = "aman@email.com",
-            initialAmount = 120000.78,
+            initialAmount = 12000078,
             currentUserInfoStep = UserInfoStep.NAME,
-            currency = CurrencyInfo("INR","₹")
+            currency = CurrencyInfo("INR", "₹")
         ),
         onNameChange = {},
         onEmailChange = {},

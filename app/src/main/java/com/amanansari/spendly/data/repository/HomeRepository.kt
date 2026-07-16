@@ -31,7 +31,7 @@ class HomeRepository @Inject constructor(
 
     fun getBudget(userId : UUID, month: String): Flow<BudgetEntity?> = budgetDao.getBudgetByMonth(userId, month)
 
-    fun getBudgetAllocationsByMonth(userId : UUID,monthKey: String): Flow<List<BudgetAllocationEntity>>
+    fun getBudgetAllocationsByMonth(userId : UUID,monthKey: String): Flow<List<BudgetAllocationEntity?>>
     = budgetAllocationDao.getAllocationsForBudgetByMonth(userId, monthKey)
 
     fun getTotalAllocatedAmount(userId : UUID, month: String) : Flow<BudgetTotals>

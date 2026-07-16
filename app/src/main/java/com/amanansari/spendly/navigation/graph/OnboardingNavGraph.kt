@@ -75,8 +75,8 @@ fun OnboardingNavGraph(
 
             InitialBudgetScreen(
                 state = state,
-                onAmountChange = { amount, newValue ->
-                    onboardingViewModel.updateInitialAmount(amount, newValue)
+                onAmountChange = { newValue ->
+                    onboardingViewModel.updateInitialAmount(newValue)
                                  },
                 onNextStep = {
                     if (onboardingViewModel.completeAddBudgetStep()) {
@@ -146,7 +146,7 @@ fun OnboardingNavGraph(
                 state = state,
                 onAmountChange = { categoryId, amountText ->
                     onboardingViewModel.updateAllocationAmount(
-                        categoryId, amountText.toDoubleOrNull() ?: 0.0, amountText
+                        categoryId, amountText
                     )
                 },
                 onRemoveCategoryClick = {

@@ -40,13 +40,13 @@ class OnboardingRepository(
     ){
 
         val currentMonthKey = YearMonth.now().toString() // e.g. "2026-07"
-        val totalAllocated = allocations.sumOf { it.amount.times(100).roundToLong() }
+        val totalAllocated = allocations.sumOf { it.amount }
         val initialBudget = BudgetEntity(
             userId = user.userId,
             monthKey = currentMonthKey,
             openingBalance = 0L,
             totalIncome = initialAmount,
-            allocatedAmount = initialAmount,
+            allocatedAmount = totalAllocated,
             closingBalance = initialAmount - totalAllocated,
             copiedFromMonthKey = null,
             isAutoCopied = false
@@ -58,7 +58,7 @@ class OnboardingRepository(
                 userId = user.userId,
                 monthKey = currentMonthKey,
                 categoryId = row.category.id,
-                allocatedAmount = row.amount.times(100).roundToLong(),
+                allocatedAmount = row.amount,
                 isCustomised = row.isCustomised,
                 amountSpent = 0L,
 
