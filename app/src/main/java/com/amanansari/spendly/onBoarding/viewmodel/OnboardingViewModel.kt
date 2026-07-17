@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -22,13 +23,19 @@ import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.model.allExpenseCategories
 import com.amanansari.spendly.model.allIncomeCategories
 import com.amanansari.spendly.model.categoryFromId
+import com.amanansari.spendly.onBoarding.state.BudgetAllocationUiState
+import com.amanansari.spendly.onBoarding.state.IncomeSourceUistate
+import com.amanansari.spendly.onBoarding.state.UserInfoUiState
 import com.amanansari.spendly.utils.detectDefaultCurrencyInfo
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import java.util.Currency
 import java.util.Locale
 import java.util.UUID
+import javax.inject.Inject
 import kotlin.math.roundToLong
 
 enum class UserInfoStep{
@@ -47,13 +54,13 @@ sealed class OnboardingCompletionState {
 data class AllocationRow(
     val rowId : String = UUID.randomUUID().toString(),
     val category: ExpIncCategory.ExpenseCategory,
-    val amount: Double,
+    val amount: Long,
     val amountText : String = "",
     val isCustomised: Boolean = false
 )
 
-class OnboardingViewModel(
-    private val userRepository: UserRepository,
+@HiltViewModel
+class OnboardingViewModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val dataStoreManager: DataStoreManager
     ) : ViewModel() {
@@ -98,15 +105,21 @@ class OnboardingViewModel(
 
 
     //? Step - 2
-    var initialAmount by mutableDoubleStateOf(0.0)
+    var initialAmount by mutableLongStateOf(0L)
         private set
 
     //? This will store the String Value of the amount
     var amountFieldValue by mutableStateOf(TextFieldValue(""))
         private set
 
-    fun updateInitialAmount(amount : Double, newValueText : String){
-        this.initialAmount = amount
+    fun updateInitialAmount(newValueText : String){
+
+        this.initialAmount = if(newValueText.isBlank() || newValueText == "."){
+            0L
+        }
+        else{
+            BigDecimal(newValueText).movePointRight(2).longValueExact()
+        }
         this.amountFieldValue = TextFieldValue(
             text = newValueText,
             selection = TextRange(newValueText.length)
@@ -114,11 +127,11 @@ class OnboardingViewModel(
     }
 
     fun resetInitialBudget() {
-        initialAmount = 0.0
+        initialAmount = 0L
         amountFieldValue = TextFieldValue("")
     }
 
-    fun completeAddBudgetStep(): Boolean = initialAmount != 0.0
+    fun completeAddBudgetStep(): Boolean = initialAmount != 0L
 
     fun completeIncomeSourceStep(): Boolean = true
 
@@ -160,8 +173,16 @@ class OnboardingViewModel(
         allocations = allocations.filterNot { it.rowId == rowId }
     }
 
-    fun updateAllocationAmount(categoryId: String, newAmount: Double, newAmountText : String) {
+    fun updateAllocationAmount(categoryId: String, newAmountText : String) {
         allocations = allocations.map { row ->
+
+            val newAmount = if (newAmountText.isBlank() || newAmountText == ".") {
+                0L
+            } else {
+                BigDecimal(newAmountText).movePointRight(2).longValueExact()
+            }
+
+
             if (row.category.id == categoryId) row.copy(amount = newAmount, amountText = newAmountText, isCustomised = true) else row
         }
     }
@@ -195,7 +216,7 @@ class OnboardingViewModel(
     fun confirmCategorySelection() {
         val newRows = availableCategoriesForPicker
             .filter { it.id in selectedCategoryIds }
-            .map { category -> AllocationRow(category = category, amount = 0.0) }
+            .map { category -> AllocationRow(category = category, amount = 0L) }
 
         allocations = allocations + newRows
         selectedCategoryIds = emptySet()
@@ -207,7 +228,7 @@ class OnboardingViewModel(
 
     val isOnboardingCompleted = dataStoreManager.onboardingState.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = SharingStarted.Eagerly,
         initialValue = null
     )
 
@@ -215,11 +236,41 @@ class OnboardingViewModel(
        The Name will be fetched from the MainScreenViewModel
      */
 
-    val user = userRepository.getUser().stateIn(
+    val user = onboardingRepository.getUser().stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = SharingStarted.Eagerly,
         initialValue = null
     )
+
+
+    //> UI States — one per screen, built the same way TransactionViewModel.uiState is
+
+    val userInfoUiState: UserInfoUiState
+        get() = UserInfoUiState(
+            name = name,
+            email = email,
+            initialAmount = initialAmount,
+            amountFieldValue = amountFieldValue,
+            currentUserInfoStep = userInfoStep,
+            currency = currency
+        )
+
+    val incomeSourceUiState: IncomeSourceUistate
+        get() = IncomeSourceUistate(
+            availableIncomeSource = availableIncomeSource,
+            selectedIncomeSourceId = selectedIncomeSourceId
+        )
+
+    val budgetAllocationUiState: BudgetAllocationUiState
+        get() = BudgetAllocationUiState(
+            totalIncome = initialAmount,
+            allocations = allocations,
+            availableCategoriesForPicker = availableCategoriesForPicker,
+            isCategoryPickerVisible = isCategoryPickerVisible,
+            selectedCategoryIds = selectedCategoryIds
+        )
+
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun completeOnboardingStep(){
@@ -234,10 +285,9 @@ class OnboardingViewModel(
                 completionState = OnboardingCompletionState.Loading
 
                 val user = UserEntity(name = name, email = email)
-                val amount = initialAmount.times(100).roundToLong()
 
                 onboardingRepository.completeOnboarding(user,
-                    amount,
+                    initialAmount,
                     allocations,
                     resolvedIncomeCategoryId
                 )

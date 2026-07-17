@@ -13,6 +13,7 @@ import com.amanansari.spendly.data.local.db.SpendlyDatabase
 import com.amanansari.spendly.data.local.preferences.DataStoreManager
 import com.amanansari.spendly.data.repository.OnboardingRepository
 import dagger.hilt.android.HiltAndroidApp
+import jakarta.inject.Inject
 
 @HiltAndroidApp
 class SpendlyApplication : Application() {
@@ -34,17 +35,16 @@ class SpendlyApplication : Application() {
     lateinit var database: SpendlyDatabase
         private set
 
+    @Inject
+    lateinit var categoryRepository: CategoryRepository
+
     override fun onCreate() {
         super.onCreate()
 
         database = DatabaseProvider.getDatabase(this)
 
-        val categoryRepository = CategoryRepository(
-            categoryDao = database.categoryDao()
-        )
-
         applicationScope.launch {
-            categoryRepository.seedCategories()
+            categoryRepository.ensureSeeded()   // fine if this finishes late — see step 3
         }
     }
 }

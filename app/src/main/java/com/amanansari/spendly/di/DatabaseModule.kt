@@ -3,6 +3,7 @@ package com.amanansari.spendly.di
 import android.content.Context
 import com.amanansari.spendly.data.local.dao.BudgetAllocationDao
 import com.amanansari.spendly.data.local.dao.BudgetDao
+import com.amanansari.spendly.data.local.dao.CategoryDao
 import com.amanansari.spendly.data.local.dao.TransactionDao
 import com.amanansari.spendly.data.local.dao.UserDao
 import com.amanansari.spendly.data.local.db.DatabaseProvider
@@ -29,6 +30,9 @@ object DatabaseModule {
 
     @Provides
     fun provideUserDao(database : SpendlyDatabase) : UserDao = database.userDao()
+
+    @Provides
+    fun provideCategoryDao(database: SpendlyDatabase): CategoryDao = database.categoryDao()
 
     @Provides
     fun provideBudgetDao(database: SpendlyDatabase) : BudgetDao = database.budgetDao()

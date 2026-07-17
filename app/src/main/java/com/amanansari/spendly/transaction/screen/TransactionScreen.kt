@@ -1,5 +1,7 @@
 package com.amanansari.spendly.transaction.screen
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,9 +24,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -57,36 +57,88 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.amanansari.spendly.components.AddIncomeExpenseCategoryItem
-import com.amanansari.spendly.components.AmountInputField
+import com.amanansari.spendly.data.local.entity.TransactionType
 import com.amanansari.spendly.model.ExpIncCategory
-import com.amanansari.spendly.model.categoryFromId
-import com.amanansari.spendly.ui.theme.BrightGray
-import com.amanansari.spendly.ui.theme.DarkBorder
+import com.amanansari.spendly.model.allExpenseCategories
+import com.amanansari.spendly.model.allIncomeCategories
+import com.amanansari.spendly.transaction.state.TransactionUiState
+import com.amanansari.spendly.transaction.viewmodel.TransactionCompletionState
+import com.amanansari.spendly.transaction.viewmodel.TransactionViewModel
 import com.amanansari.spendly.ui.theme.ExpenseRed
 import com.amanansari.spendly.ui.theme.IncomeGreen
 import com.amanansari.spendly.ui.theme.LightBg
-import com.amanansari.spendly.ui.theme.LightGray
-import com.amanansari.spendly.ui.theme.LightNavInactive
 import com.amanansari.spendly.ui.theme.LightSurface
 import com.amanansari.spendly.ui.theme.LightTextSecondary
-import com.amanansari.spendly.ui.theme.Primary
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AddTransactionScreen(
-    onClose: ()->Unit,
-    quickSelectedCategoryId : String? = null){
+fun TransactionScreen(
+    transactionViewmodel : TransactionViewModel = hiltViewModel(),
+    onClose: () -> Unit,
+    quickSelectedCategoryId : String? = null
+){
+    LaunchedEffect(quickSelectedCategoryId) {
+        transactionViewmodel.toggleCategoryId(quickSelectedCategoryId)
+    }
 
-    var selectedCategory by remember { mutableStateOf<ExpIncCategory?>(categoryFromId(quickSelectedCategoryId)) }
-    var selectedDate by remember { mutableStateOf<Long?>(System.currentTimeMillis()) }
+    // React to completion state changes instead of checking once
+    LaunchedEffect(transactionViewmodel.completionState) {
+        if (transactionViewmodel.completionState == TransactionCompletionState.Success) {
+            onClose()
+        }
+    }
+
+    TransactionScreenContent(
+        state = transactionViewmodel.uiState,
+        onClose = onClose,
+        onCategoryChange = {
+            transactionViewmodel.toggleCategoryId(it)
+        },
+        onAmountChange = {
+            transactionViewmodel.updateAmount(it)
+        },
+        onNoteChange = {
+            transactionViewmodel.updateNote(it)
+        },
+        onDateChange = {
+            transactionViewmodel.updateDate(it)
+        },
+        onTypeChange = {
+            transactionViewmodel.updateType(it)
+        },
+        onSubmit = {
+            transactionViewmodel.completeTransaction()
+        }
+
+    )
+}
+
+@Composable
+fun TransactionScreenContent(
+    state : TransactionUiState,
+    onClose: ()->Unit,
+    onCategoryChange : (String) ->Unit,
+    onAmountChange : (String) -> Unit,
+    onNoteChange : (String) -> Unit,
+    onDateChange : (Long) -> Unit,
+    onTypeChange : (TransactionType) -> Unit,
+    onSubmit : () -> Unit,
+    )
+{
 
     val pagerState = rememberPagerState(pageCount = { 2 }) // 0 = Expense, 1 = Income
     val scope = rememberCoroutineScope()
     val isExpense = pagerState.currentPage == 0
+
+    LaunchedEffect(isExpense) {
+        onTypeChange(if (isExpense) TransactionType.EXPENSE else TransactionType.INCOME)
+    }
 
     Column(
         modifier = Modifier
@@ -94,7 +146,7 @@ fun AddTransactionScreen(
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ){
-        ModalTopBar(
+        TransactionTopBar(
             isExpense = isExpense,
             onCloseClick = onClose,
             onTypeChanged = { expenseSelected ->
@@ -103,6 +155,15 @@ fun AddTransactionScreen(
                 }
             }
         )
+
+        if (state.errorMessage != null) {
+            Text(
+                text = state.errorMessage,
+                color = Color.Red,
+                fontSize = 13.sp,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
 
         TransactionTypeToggle(isExpense, onTypeChanged = {expenseSelected ->
             scope.launch {
@@ -120,18 +181,25 @@ fun AddTransactionScreen(
 
             if (page == 0) {
 
-                AddExpenseScreen(
-                    selectedCategory = selectedCategory as? ExpIncCategory.ExpenseCategory,
-                    onCategoryChange = { selectedCategory = it },
-                    selectedDate = selectedDate,
-                    onDateChange = { selectedDate = it }
+                TransactionForm(
+                    state = state,
+                    categories = allExpenseCategories,
+                    onCategoryChange = onCategoryChange,
+                    onAmountChange = onAmountChange,
+                    onDateChange = onDateChange,
+                    onNoteChange = onNoteChange,
+                    accentColor = ExpenseRed
                 )
+
             } else {
-                AddIncomeScreen(
-                    selectedCategory = selectedCategory as? ExpIncCategory.IncomeCategory,
-                    onCategoryChange = { selectedCategory = it },
-                    selectedDate = selectedDate,
-                    onDateChange = { selectedDate = it }
+                TransactionForm(
+                    state = state,
+                    categories = allIncomeCategories,
+                    onCategoryChange = onCategoryChange,
+                    onAmountChange = onAmountChange,
+                    onDateChange = onDateChange,
+                    onNoteChange = onNoteChange,
+                    accentColor = IncomeGreen
                 )
             }
         }
@@ -143,7 +211,9 @@ fun AddTransactionScreen(
             label = "saveAccent"
         )
 
-        Button(onClick = {  },
+        Button(onClick = {
+            onSubmit()
+        },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),
@@ -172,140 +242,11 @@ fun AddTransactionScreen(
 
 
 
-@Composable
-fun<T : ExpIncCategory> CategoryGrid(
-    categories: List<T>,
-    selectedCategory: T?,
-    onCategorySelected: (T) -> Unit
-) {
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(180.dp), //? Fixed the height of the Grid to Show only 2 Rows
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(6.dp)
-    ) {
-        items(categories) { category ->
-
-            AddIncomeExpenseCategoryItem(
-                category = category,
-                isSelected = category == selectedCategory,
-                onClick = { onCategorySelected(category) }
-            )
-        }
-    }
-}
 
 
 @Composable
-fun ExpenseNoteField(
-    value: String,
-    onValueChange: (String) -> Unit
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        textStyle = LocalTextStyle.current.copy(color = Color.Black),
-        placeholder = {
-            Text("What was this for?", color = Color.Gray)
-        },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Edit,
-                contentDescription = null,
-                tint = LightTextSecondary
-
-            )
-        },
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier
-            .fillMaxWidth(),
-        singleLine = true,
-
-        )
-}
-
-@Composable
-fun DatePickerField(
-    selectedDate: Long?,
-    onDateChange: (Long) -> Unit
-){
-
-    var showDatePicker by remember { mutableStateOf(false) }
-    val interactionSource = remember { MutableInteractionSource() }
-
-    OutlinedTextField(
-        value = formatDate(selectedDate),
-        onValueChange = {},
-        readOnly = true,
-        textStyle = LocalTextStyle.current.copy(color = Color.Black),
-        leadingIcon = {
-            Icon(imageVector = Icons.Default.DateRange,
-                contentDescription = "Date Picker",
-                tint = LightTextSecondary
-            )
-        },
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth(),
-        interactionSource = interactionSource,
-        singleLine = true
-    )
-
-    LaunchedEffect(interactionSource) {
-        interactionSource.interactions.collect {
-            showDatePicker = true
-        }
-    }
-
-
-    if (showDatePicker) {
-
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = selectedDate
-                ?: System.currentTimeMillis() // default today
-        )
-
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let {
-                            onDateChange(it)   // 🔥 send to parent
-                        }
-                        showDatePicker = false
-                    }
-                ) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showDatePicker = false }
-                ) {
-                    Text("Cancel")
-                }
-            }
-        ) {
-            DatePicker(state = datePickerState)
-        }
-    }
-}
-
-
-fun formatDate(millis: Long?): String {
-    return millis?.let {
-        SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-            .format(Date(it))
-    } ?: ""
-}
-
-
-@Composable
-fun ModalTopBar(isExpense: Boolean,
+fun TransactionTopBar(isExpense: Boolean,
                 onCloseClick: () -> Unit,
                 onTypeChanged: (Boolean) -> Unit,
 ){
@@ -439,8 +380,16 @@ fun TransactionTypeToggle(
 
 @Preview(showBackground = true)
 @Composable
-fun AddTransactionScreenPreview(){
-    AddTransactionScreen(
-        onClose = {}
+fun TransactionScreenPreview(){
+    TransactionScreenContent(
+        state = TransactionUiState(),
+        onClose = {},
+        onCategoryChange = {},
+        onAmountChange = {},
+        onNoteChange = {},
+        onDateChange = {},
+        onTypeChange = {},
+        onSubmit = {}
+
     )
 }

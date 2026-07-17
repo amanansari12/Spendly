@@ -14,10 +14,8 @@ import com.amanansari.spendly.data.local.db.DatabaseProvider
 import com.amanansari.spendly.data.local.preferences.DataStoreManager
 import com.amanansari.spendly.data.repository.OnboardingRepository
 import com.amanansari.spendly.data.repository.UserRepository
-import com.amanansari.spendly.home.viewmodel.HomeViewModel
 import com.amanansari.spendly.navigation.AppNavigation
 import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModel
-import com.amanansari.spendly.onBoarding.viewmodel.OnboardingViewModelFactory
 import com.amanansari.spendly.ui.theme.SpendlyTheme
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,22 +30,6 @@ class MainActivity : ComponentActivity() {
 
         val splashScreen = installSplashScreen()
 
-        val database = DatabaseProvider.getDatabase(applicationContext)
-
-        val dataStoreManager = DataStoreManager(applicationContext)
-
-        val userRepository = UserRepository(database.userDao())
-        val onboardingRepository = OnboardingRepository(
-            database,
-            database.userDao(),
-            database.budgetDao(),
-            database.transactionDao(),
-            database.budgetAllocationDao(),
-            dataStoreManager)
-
-
-        val factory = OnboardingViewModelFactory(userRepository, onboardingRepository, dataStoreManager)
-
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(
                 android.graphics.Color.TRANSPARENT,
@@ -58,7 +40,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
-            val onboardingViewModel : OnboardingViewModel = viewModel(factory = factory)
+            val onboardingViewModel : OnboardingViewModel = hiltViewModel()
 
             splashScreen.setKeepOnScreenCondition {
                 onboardingViewModel.isOnboardingCompleted.value == null

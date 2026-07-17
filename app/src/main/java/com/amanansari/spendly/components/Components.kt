@@ -73,7 +73,7 @@ fun CategoryIconBox(
 fun AddIncomeExpenseCategoryItem(
     category: ExpIncCategory,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onCategoryChange: (String) -> Unit
 ){
 
     val scale by animateFloatAsState(
@@ -101,7 +101,7 @@ fun AddIncomeExpenseCategoryItem(
     modifier = modifier
         .clip(RoundedCornerShape(18.dp))
         .background(backgroundColor)
-        .clickable { onClick() }
+        .clickable { onCategoryChange(category.id) }
         .padding(8.dp)
         .height(50.dp)
         .width(140.dp)
@@ -148,9 +148,9 @@ fun AddIncomeExpenseCategoryItem(
 @Composable
 @Preview
 fun AddIncomeExpenseCategoryItemPreview(){
-    AddIncomeExpenseCategoryItem(
-        category = ExpIncCategory.IncomeCategory.Salary,
-        isSelected = false,
-        onClick = {}
-    )
+//    AddIncomeExpenseCategoryItem(
+//        category = ExpIncCategory.IncomeCategory.Salary,
+//        isSelected = false,
+//        onClick = {}
+//    )
 }

@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -72,6 +71,8 @@ import com.amanansari.spendly.ui.theme.Primary
 import com.amanansari.spendly.ui.theme.PrimaryDark
 import com.amanansari.spendly.ui.theme.SpendlyTheme
 import com.amanansari.spendly.utils.toCurrencyString
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 @Composable
 fun InitialBudgetAllocationScreen(
@@ -85,16 +86,20 @@ fun InitialBudgetAllocationScreen(
     onPrevStep: () -> Unit,
     onFinishClick: () -> Unit,
 ){
-
-    val rupee = "\u20B9"
+    val totalIncome = BigDecimal(state.totalIncome).movePointLeft(2)
 
     val progressFraction = if (state.totalIncome > 0)
-        (state.totalAllocated / state.totalIncome).toFloat().coerceIn(0f, 1f)
+        state.totalAllocated
+            .divide(totalIncome, 4, RoundingMode.HALF_UP)
+            .toFloat()
+            .coerceIn(0f, 1f)
     else 0f
 
-    val allocatedPercentage = if (state.totalIncome > 0)
-        (state.totalAllocated / state.totalIncome) * 100
-    else 0.0
+    val allocatedPercentage: BigDecimal = if (state.totalIncome > 0)
+        state.totalAllocated
+            .divide(totalIncome, 4, RoundingMode.HALF_UP)
+            .multiply(BigDecimal(100))
+    else BigDecimal.ZERO
 
 
     if(state.isCategoryPickerVisible){
@@ -198,7 +203,7 @@ fun InitialBudgetAllocationScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = state.totalIncome.toCurrencyString("INR"),
+                                    text = totalIncome.toCurrencyString("INR"),
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 18.sp,
                                     color = Color.Black
@@ -253,7 +258,7 @@ fun InitialBudgetAllocationScreen(
                                     )
 
                                     Text(
-                                        text = state.totalAllocated.toCurrencyString("INR") + "/" + state.totalIncome.toCurrencyString("INR"),
+                                        text = state.totalAllocated.toCurrencyString("INR") + "/" + totalIncome.toCurrencyString("INR"),
                                         fontSize = 14.sp,
                                         color = Color.DarkGray,
                                         fontWeight = FontWeight.SemiBold
@@ -537,11 +542,11 @@ fun CategoryPickerForAllocation(state: BudgetAllocationUiState,onCategoryToggle:
 @Composable
 fun InitialBudgetAllocationScreenPreview() {
     val sampleState = BudgetAllocationUiState(
-        totalIncome = 50000.0,
+        totalIncome = 500000,
         allocations = listOf(
-            AllocationRow(category = ExpIncCategory.ExpenseCategory.Food, amount = 8000.0)
-            ,AllocationRow(category = ExpIncCategory.ExpenseCategory.Transport, amount = 2000.0),
-            AllocationRow(category = ExpIncCategory.ExpenseCategory.Shopping, amount = 8000.0)),
+            AllocationRow(category = ExpIncCategory.ExpenseCategory.Food, amount = 80000)
+            ,AllocationRow(category = ExpIncCategory.ExpenseCategory.Transport, amount = 20000),
+            AllocationRow(category = ExpIncCategory.ExpenseCategory.Shopping, amount = 80000)),
         availableCategoriesForPicker = allExpenseCategories.filterNot { candidate ->candidate.id in setOf("food", "transport", "shopping")},
         isCategoryPickerVisible = false,
         selectedCategoryIds = emptySet())

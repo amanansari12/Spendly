@@ -38,15 +38,8 @@ fun OnboardingNavGraph(
         modifier = Modifier.statusBarsPadding()
     ){
         composable<UserInfo> {
-            val state = UserInfoUiState(
-                name = onboardingViewModel.name,
-                email = onboardingViewModel.email,
-                initialAmount = onboardingViewModel.initialAmount,
-                currentUserInfoStep = onboardingViewModel.userInfoStep,
-                currency = onboardingViewModel.currency
-            )
             UserInfoScreen(
-                state = state,
+                state = onboardingViewModel.userInfoUiState,
                 onNameChange = { onboardingViewModel.updateName(it) },
                 onEmailChange = { onboardingViewModel.updateEmail(it) },
                 onNext = { onboardingViewModel.goToEmailStep() },
@@ -59,25 +52,14 @@ fun OnboardingNavGraph(
         }
 
         composable<InitialBudget> {
-            val state = UserInfoUiState(
-                name = onboardingViewModel.name,
-                email = onboardingViewModel.email,
-                initialAmount = onboardingViewModel.initialAmount,
-                amountFieldValue = onboardingViewModel.amountFieldValue,
-                currentUserInfoStep = onboardingViewModel.userInfoStep,
-                currency = onboardingViewModel.currency
-            )
-
-            BackHandler() {
+            BackHandler {
                 onboardingViewModel.resetInitialBudget()
                 navController.popBackStack()
             }
 
             InitialBudgetScreen(
-                state = state,
-                onAmountChange = { amount, newValue ->
-                    onboardingViewModel.updateInitialAmount(amount, newValue)
-                                 },
+                state = onboardingViewModel.userInfoUiState,
+                onAmountChange = { onboardingViewModel.updateInitialAmount(it) },
                 onNextStep = {
                     if (onboardingViewModel.completeAddBudgetStep()) {
                         navController.navigate(IncomeSource)
@@ -86,72 +68,47 @@ fun OnboardingNavGraph(
                 onPrevStep = {
                     onboardingViewModel.resetInitialBudget()
                     navController.popBackStack()
-
                 }
             )
         }
 
         composable<IncomeSource> {
-
-            val state = IncomeSourceUistate(
-                availableIncomeSource = onboardingViewModel.availableIncomeSource,
-                selectedIncomeSourceId =onboardingViewModel.selectedIncomeSourceId
-            )
-
-            BackHandler() {
+            BackHandler {
                 onboardingViewModel.resetIncomeSelection()
                 navController.popBackStack()
             }
 
             IncomeSourceScreen(
-                state = state,
+                state = onboardingViewModel.incomeSourceUiState,
                 onContinue = {
                     if (onboardingViewModel.completeIncomeSourceStep()) {
-                    navController.navigate(InitialBudgetAllocation)
-                    }},
+                        navController.navigate(InitialBudgetAllocation)
+                    }
+                },
                 onSkip = {
                     onboardingViewModel.resetIncomeSelection()
                     navController.navigate(InitialBudgetAllocation)
                 },
-                onIncomeToggle = {onboardingViewModel.toggleIncome(it)},
+                onIncomeToggle = { onboardingViewModel.toggleIncome(it) },
                 onPrevStep = {
                     onboardingViewModel.resetIncomeSelection()
                     navController.popBackStack()
-
                 }
             )
-
         }
 
         composable<InitialBudgetAllocation> {
-            val state = BudgetAllocationUiState(
-                totalIncome = onboardingViewModel.initialAmount,
-                allocations = onboardingViewModel.allocations,
-                availableCategoriesForPicker = onboardingViewModel.availableCategoriesForPicker,
-                isCategoryPickerVisible = onboardingViewModel.isCategoryPickerVisible,
-                selectedCategoryIds = onboardingViewModel.selectedCategoryIds
-            )
-
-
-            LaunchedEffect(onboardingViewModel.completionState) {
-                Log.d("Onboarding", "completionState = ${onboardingViewModel.completionState}")
-            }
-
-            BackHandler(){
+            BackHandler {
                 onboardingViewModel.removeAllocations()
                 navController.popBackStack()
             }
 
             InitialBudgetAllocationScreen(
-                state = state,
+                state = onboardingViewModel.budgetAllocationUiState,
                 onAmountChange = { categoryId, amountText ->
-                    onboardingViewModel.updateAllocationAmount(
-                        categoryId, amountText.toDoubleOrNull() ?: 0.0, amountText
-                    )
+                    onboardingViewModel.updateAllocationAmount(categoryId, amountText)
                 },
-                onRemoveCategoryClick = {
-                    onboardingViewModel.removeCategoryFromAllocation(it)
-                },
+                onRemoveCategoryClick = { onboardingViewModel.removeCategoryFromAllocation(it) },
                 onAddCategoryClick = { onboardingViewModel.openCategoryPicker() },
                 onCategoryToggle = { onboardingViewModel.toggleCategorySelection(it) },
                 onConfirmSelection = { onboardingViewModel.confirmCategorySelection() },
@@ -159,9 +116,7 @@ fun OnboardingNavGraph(
                 onPrevStep = {
                     onboardingViewModel.removeAllocations()
                     navController.popBackStack()
-
-                },
-
+                }
             ) { onboardingViewModel.completeOnboardingStep() }
         }
     }

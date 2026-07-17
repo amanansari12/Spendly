@@ -34,17 +34,24 @@ import com.amanansari.spendly.onBoarding.viewmodel.AllocationRow
 import com.amanansari.spendly.ui.theme.LightGray
 import com.amanansari.spendly.ui.theme.LightSurface
 import com.amanansari.spendly.ui.theme.Primary
-
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 
 @Composable
 fun BudgetCard(
-    totalIncome : Double,
-    item : AllocationRow,
-    onAmountChange : (String, String)->Unit
+    totalIncome: Long,
+    item: AllocationRow,
+    onAmountChange: (String, String) -> Unit
 ){
 
     val interactionSource = remember { MutableInteractionSource() }
+
+    val percentageOfIncome: BigDecimal = if (totalIncome > 0L)
+        BigDecimal(item.amount)
+            .divide(BigDecimal(totalIncome), 4, RoundingMode.HALF_UP)
+            .multiply(BigDecimal(100))
+    else BigDecimal.ZERO
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -76,11 +83,8 @@ fun BudgetCard(
                     )
 
                     Text(
-                        text = if (totalIncome > 0)
-                            String.format(
-                                "%.2f%% of income",
-                                (item.amount / totalIncome) * 100
-                            )
+                        text = if (totalIncome > 0L)
+                            String.format("%.2f%% of income",percentageOfIncome)
                         else
                             "Not allocated yet",
                         fontSize = 10.sp,
@@ -93,7 +97,10 @@ fun BudgetCard(
                 value = item.amountText,
                 onValueChange = { newValue ->
                     if (newValue.matches(Regex("^\\d{0,10}(\\.\\d{0,2})?$"))) {
-                        val parsedValue = newValue.toDoubleOrNull() ?: 0.0
+                        val parsedValue = newValue.toBigDecimalOrNull()
+                            ?.movePointRight(2)
+                            ?.setScale(0, RoundingMode.HALF_UP)
+                            ?.toLong() ?: 0L
                         if (parsedValue <= totalIncome) {
                             onAmountChange(item.category.id, newValue)
                         }

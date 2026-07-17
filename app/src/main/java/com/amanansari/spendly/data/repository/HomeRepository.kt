@@ -1,5 +1,6 @@
 package com.amanansari.spendly.data.repository
 
+import android.util.Printer
 import com.amanansari.spendly.data.local.dao.BudgetAllocationDao
 import com.amanansari.spendly.data.local.dao.BudgetDao
 import com.amanansari.spendly.data.local.dao.BudgetTotals
@@ -17,21 +18,21 @@ import java.util.UUID
 import javax.inject.Inject
 
 class HomeRepository @Inject constructor(
-    private val userDao: UserDao,
     private val budgetDao: BudgetDao,
     private val budgetAllocationDao: BudgetAllocationDao,
-    private val transactionDao: TransactionDao
+    private val transactionDao: TransactionDao,
+    private val userRepository: UserRepository
 ) {
 
     //* Top Bar
 
-    fun getUser() : Flow<UserEntity?> = userDao.getUser()
+    fun getUser() : Flow<UserEntity?> = userRepository.getUser()
 
     //* Balance Summary Card
 
     fun getBudget(userId : UUID, month: String): Flow<BudgetEntity?> = budgetDao.getBudgetByMonth(userId, month)
 
-    fun getBudgetAllocationsByMonth(userId : UUID,monthKey: String): Flow<List<BudgetAllocationEntity>>
+    fun getBudgetAllocationsByMonth(userId : UUID,monthKey: String): Flow<List<BudgetAllocationEntity?>>
     = budgetAllocationDao.getAllocationsForBudgetByMonth(userId, monthKey)
 
     fun getTotalAllocatedAmount(userId : UUID, month: String) : Flow<BudgetTotals>

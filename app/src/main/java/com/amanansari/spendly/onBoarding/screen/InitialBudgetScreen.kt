@@ -52,6 +52,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.amanansari.spendly.components.AmountInputField
 import com.amanansari.spendly.model.CurrencyInfo
 import com.amanansari.spendly.onBoarding.state.UserInfoUiState
 import com.amanansari.spendly.onBoarding.viewmodel.UserInfoStep
@@ -59,23 +60,24 @@ import com.amanansari.spendly.ui.theme.LightSurface
 import com.amanansari.spendly.ui.theme.Platinum
 import com.amanansari.spendly.ui.theme.Primary
 import com.amanansari.spendly.ui.theme.PrimaryDark
+import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.text.isEmpty
 
 data class QuickAmount(
     val label : String,
-    val amount : Double
+    val amount : Long
 )
 
 val quickAmounts = listOf(
-    QuickAmount("10K", 10_000.00),
-    QuickAmount("20K", 20_000.00),
-    QuickAmount("30K", 30_000.00),
-    QuickAmount("40K", 40_000.00),
-    QuickAmount("50K", 50_000.00),
-    QuickAmount("1L", 100_000.00),
-    QuickAmount("2L", 200_000.00),
-    QuickAmount("5L", 500_000.00)
+    QuickAmount("10K", 1_000_000L),  // ₹10,000.00
+    QuickAmount("20K", 2_000_000L),  // ₹20,000.00
+    QuickAmount("30K", 3_000_000L),  // ₹30,000.00
+    QuickAmount("40K", 4_000_000L),  // ₹40,000.00
+    QuickAmount("50K", 5_000_000L),  // ₹50,000.00
+    QuickAmount("1L", 10_000_000L),  // ₹1,00,000.00
+    QuickAmount("2L", 20_000_000L),  // ₹2,00,000.00
+    QuickAmount("5L", 50_000_000L)   // ₹5,00,000.00
 )
 
 private const val MAX_AMOUNT_LENGTH = 12
@@ -85,7 +87,7 @@ private val amountRegex = Regex("^\\d{0,10}(\\.\\d{0,2})?$")
 @Composable
 fun InitialBudgetScreen(
     state : UserInfoUiState,
-    onAmountChange : (Double, String)->Unit,
+    onAmountChange : (String)->Unit,
     onNextStep : ()->Unit,
     onPrevStep : () -> Unit
 ) {
@@ -125,83 +127,8 @@ fun InitialBudgetScreen(
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ){
-            Column(
-                modifier = Modifier.width(IntrinsicSize.Min),
-                horizontalAlignment = Alignment.CenterHorizontally,
-
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    Text(
-                        text = state.currency.symbol,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 50.sp,
-                        color = PrimaryDark,
-
-                        )
-                    Spacer(Modifier.width(15.dp))
-
-                    BasicTextField(
-                        value = state.amountFieldValue,
-                        onValueChange = { newValue ->
-
-                            val newText = newValue.text
-                            if (newText.length <= MAX_AMOUNT_LENGTH && newText.matches(amountRegex)) {
-
-                                onAmountChange(newText.toDoubleOrNull() ?: 0.0, newText)
-                            }
-
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number
-                        ),
-                        cursorBrush = SolidColor(PrimaryDark),
-                        textStyle = TextStyle(
-                            fontSize = 38.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        ),
-                        modifier = Modifier
-                            .widthIn(min = 120.dp)
-                            .heightIn(min = 56.dp),
-                        decorationBox = { innerTextField ->
-                            Box(modifier = Modifier.heightIn(min = 56.dp).padding(4.dp),
-                                contentAlignment = Alignment.CenterStart) {
-                                if (state.amountFieldValue.text.isEmpty()) {
-                                    Text(text = "0.00",
-                                        fontSize = 38.sp,
-                                        lineHeight = 44.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Platinum
-                                    )
-                                }
-                                innerTextField()
-                            }
-                        }
-
-
-                    )
-
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                HorizontalDivider(
-                    modifier = Modifier.fillMaxWidth(), // <-- now matches the Row above it exactly
-                    thickness = 2.dp,
-                    color = PrimaryDark
-                )
-
-
-            }
-        }
+        //> Amount Field Input
+        AmountInputField(state.amountFieldValue, onAmountChange, state.currency.symbol)
 
         Spacer(modifier = Modifier.height(40.dp))
 
@@ -227,7 +154,7 @@ fun InitialBudgetScreen(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
                             .background(
-                                if (isSelected && state.initialAmount > 0.0) PrimaryDark.copy(alpha = 0.15f)
+                                if (isSelected && state.initialAmount > 0L) PrimaryDark.copy(alpha = 0.15f)
                                 else Color.LightGray.copy(alpha = 0.3f)
                             )
                             .border(
@@ -236,8 +163,10 @@ fun InitialBudgetScreen(
                                 shape = RoundedCornerShape(12.dp)
                             )
                             .clickable {
-                                val newText = quickAmount.amount.toString()
-                                onAmountChange(quickAmount.amount, newText)
+                                val newText = BigDecimal(quickAmount.amount)
+                                    .movePointLeft(2)
+                                    .toPlainString()
+                                onAmountChange(newText)
                             }
                             .padding(horizontal = 15.dp, vertical = 10.dp)
 
@@ -347,12 +276,12 @@ fun InitialBudgetScreenPreview(){
         state = UserInfoUiState(
             name = "Aman",
             email = "aman@email.com",
-            initialAmount = 120000.78,
+            initialAmount = 12000078L,
             amountFieldValue = TextFieldValue("120000.78"),
             currentUserInfoStep = UserInfoStep.EMAIL,
             currency = CurrencyInfo("INR", "₹")
         ),
-        onAmountChange = {_, _ ->},
+        onAmountChange = {_ ->},
         onNextStep = {},
         onPrevStep = {}
     )

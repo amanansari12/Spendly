@@ -89,9 +89,12 @@ import com.amanansari.spendly.data.local.entity.TransactionType
 import com.amanansari.spendly.model.categoryFromId
 import com.amanansari.spendly.utils.formatTransactionTime
 import com.amanansari.spendly.utils.toCurrencyString
+import java.math.BigDecimal
 import java.time.ZoneId
 import java.time.Instant
 import java.util.UUID
+
+private fun Long.toMajorUnits(): BigDecimal = BigDecimal(this).movePointLeft(2)
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -114,28 +117,38 @@ fun HomeScreenContent(
     state: HomeUiState,
     onQuickSelect: (ExpIncCategory.ExpenseCategory) -> Unit,
 
-) {
-
-
+    ) {
 
     val isTransaction = false
     val context = LocalContext.current
-
 
     val currentDate = LocalDate.now()
     val formatter = DateTimeFormatter.ofPattern("MMM yyyy")
     val currentMonthYear = currentDate.format(formatter)
 
+    val budgetAvailableToSpent = (state.totalAllocatedAmount - state.amountSpentFromAllocated)
+        .toMajorUnits()
+        .toCurrencyString(state.defaultCurrency)
 
-    val budgetAvailableToSpent = ((state.totalAllocatedAmount - state.amountSpentFromAllocated) / 100).toDouble().toCurrencyString(state.defaultCurrency)
-    val totalBalanceForMonth = ((state.totalIncome + state.openingBalance)/100).toDouble().toCurrencyString(state.defaultCurrency)
-    val totalAllocatedAmount = (state.totalAllocatedAmount/100).toDouble().toCurrencyString(state.defaultCurrency)
-    val amountSpentFromAllocated = (state.amountSpentFromAllocated/100).toDouble().toCurrencyString(state.defaultCurrency)
-    val unAllocatedAmount = ((state.totalIncome + state.openingBalance - state.totalAllocatedAmount)/100).toDouble().toCurrencyString(state.defaultCurrency)
+    val totalBalanceForMonth = (state.totalIncome + state.openingBalance)
+        .toMajorUnits()
+        .toCurrencyString(state.defaultCurrency)
+
+    val totalAllocatedAmount = state.totalAllocatedAmount
+        .toMajorUnits()
+        .toCurrencyString(state.defaultCurrency)
+
+    val amountSpentFromAllocated = state.amountSpentFromAllocated
+        .toMajorUnits()
+        .toCurrencyString(state.defaultCurrency)
+
+    val unAllocatedAmount = (state.totalIncome + state.openingBalance - state.totalAllocatedAmount)
+        .toMajorUnits()
+        .toCurrencyString(state.defaultCurrency)
 
     val budgetStatusColor = when {
-        state.budgetUsedPercentage >= 100f -> ExpenseRed
-        state.budgetUsedPercentage >= 75f -> Color(0xFFFFDB58) // same amber as the unallocated warning
+        state.budgetUsedPercentage >= BigDecimal(100) -> ExpenseRed
+        state.budgetUsedPercentage >= BigDecimal(75) -> Color(0xFFFFDB58) // same amber as the unallocated warning
         else -> LightSurface
     }
 
@@ -146,654 +159,656 @@ fun HomeScreenContent(
         ?.getDisplayName(TextStyle.FULL, LocalLocale.current.platformLocale)
 
     LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            horizontalAlignment = Alignment.Start
-            
-        ) {
-            //! Redesigned the Entire BalanceSummaryCard
-            //? We use a Box instead of a Card because making a Card's background transparent
-            //? (which is necessary to show our custom gradient) breaks its built-in drop shadow.
-            //? A Box with explicit .shadow() and .background() modifiers gives us perfect control.
-            /*TODO: Thinking of Adding a Circular Indicator which shows the remaining Budged
-                and also shows the Used Budged
-                The Used Budged Shows in color according to assigned Color and Arrow comes out
-                and Points to the name and as Allocated Money in Budget Increases then color changes
-            */
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalAlignment = Alignment.Start
+
+    ) {
+        //! Redesigned the Entire BalanceSummaryCard
+        //? We use a Box instead of a Card because making a Card's background transparent
+        //? (which is necessary to show our custom gradient) breaks its built-in drop shadow.
+        //? A Box with explicit .shadow() and .background() modifiers gives us perfect control.
+        /*TODO: Thinking of Adding a Circular Indicator which shows the remaining Budged
+            and also shows the Used Budged
+            The Used Budged Shows in color according to assigned Color and Arrow comes out
+            and Points to the name and as Allocated Money in Budget Increases then color changes
+        */
         // Balance Summary Card
         item {
-                BoxWithConstraints(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    val gradient = Brush.linearGradient(
-                        colorStops = arrayOf(
-                            0.0f to PrimaryDark,
-                            0.5f to Primary,
-                            1.0f to PrimaryLight
-                        ),
-                        start = Offset(0f, 0f),
-                        end = Offset(
-                            constraints.maxWidth.toFloat(),
-                            constraints.maxHeight.toFloat() * 0.7f
-                        )
+            BoxWithConstraints(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                val gradient = Brush.linearGradient(
+                    colorStops = arrayOf(
+                        0.0f to PrimaryDark,
+                        0.5f to Primary,
+                        1.0f to PrimaryLight
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset(
+                        constraints.maxWidth.toFloat(),
+                        constraints.maxHeight.toFloat() * 0.7f
                     )
+                )
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth() // Keeps your horizontal size
-                            .clip(RoundedCornerShape(20.dp)) // Keeps the gradient inside the rounded corners
-                            .background(gradient) // Applies the purple gradient
-                            .border(
-                                width = 1.dp,
-                                color = Color.White.copy(alpha = 0.2f),
-                                shape = RoundedCornerShape(20.dp)
-                            )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth() // Keeps your horizontal size
+                        .clip(RoundedCornerShape(20.dp)) // Keeps the gradient inside the rounded corners
+                        .background(gradient) // Applies the purple gradient
+                        .border(
+                            width = 1.dp,
+                            color = Color.White.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp)
-                        ) {
-                            // Current Income Column Styling
-                            Column {
+                        // Current Income Column Styling
+                        Column {
 
-                                Row(
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth()
-                                ){
-                                    Text(
-                                        text = "AVAILABLE TO SPEND",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = LightGray
-                                    )
-
-                                    Row(
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(40))
-                                            .background(color = Color.White.copy(alpha = 0.15f))
-                                            .padding(horizontal = 6.dp)
-
-                                    ){
-                                        Icon(
-                                            imageVector = Icons.Default.CalendarMonth,
-                                            contentDescription = null,
-                                            tint = BrightGray,
-                                            modifier = Modifier
-                                                .size(14.dp)
-                                                .padding(end = 2.dp)
-                                        )
-
-                                        Text(
-                                            text = currentMonthYear,
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = BrightGray,
-                                        )
-                                    }
-
-                                }
-
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ){
                                 Text(
-                                    text = budgetAvailableToSpent,
-                                    style = MaterialTheme.typography.headlineLarge,
-                                    color = LightSurface,
-                                    fontWeight = FontWeight.Bold
-                                )
-
-                                Text(
-                                    text = "of $totalAllocatedAmount this Month",
-                                    fontSize = 10.sp,
+                                    text = "AVAILABLE TO SPEND",
+                                    fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = LightGray
                                 )
 
-                                if(state.isUnAllocatedAmountLeft){
-
-                                    val isOverspentWithUnallocated = state.budgetUsedPercentage >= 100f
-
-                                    Row(
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(40))
-                                            .background(color = if (isOverspentWithUnallocated)
-                                                ExpenseRed.copy(alpha = 0.22f)
-                                            else
-                                                Color.Red.copy(alpha = 0.14f))
-                                            .clickable {
-                                                Toast.makeText(context, "Unallocated Amount Clicked", Toast.LENGTH_SHORT).show()
-                                            }
-                                            .padding(horizontal = 6.dp)
-
-                                    ) {
-
-                                        Icon(
-                                            imageVector = Icons.Default.WarningAmber,
-                                            contentDescription = null,
-                                            tint = if (isOverspentWithUnallocated) ExpenseRed else Color(0xFFFFDB58),
-                                            modifier = Modifier
-                                                .size(14.dp)
-                                                .padding(end = 2.dp)
-                                        )
-
-
-                                        Text(
-                                            text = if (isOverspentWithUnallocated)
-                                                "$unAllocatedAmount Unassigned — Reassign to Cover Overspend"
-                                            else
-                                                "$unAllocatedAmount Unallocated - Tap to Assign",
-                                            fontSize = if (isOverspentWithUnallocated) 10.sp else 12.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = LightSurface,
-                                            modifier = Modifier.clickable{
-                                                Toast.makeText(context, "Unallocated Amount Clicked", Toast.LENGTH_SHORT).show()
-                                            }
-
-                                        )
-                                    }
-
-                                }
-                            }
-
-                            HorizontalDivider(
-                                modifier = Modifier.padding(top = 16.dp, bottom = 16.dp),
-                                color = Color.White.copy(alpha = 0.2f) // Optional: makes the divider blend better with the gradient
-                            )
-
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(20))
-                                    .background(Color.White.copy(alpha = 0.15f))
-                                    .padding(12.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ){
-
                                 Row(
-                                    modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(40))
+                                        .background(color = Color.White.copy(alpha = 0.15f))
+                                        .padding(horizontal = 6.dp)
+
                                 ){
-                                    Row(
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.padding(4.dp)
-
-                                    ){
-                                        Icon(
-                                            imageVector = Icons.Default.AccountBalanceWallet,
-                                            contentDescription = null,
-                                            tint = IncomeGreen,
-                                            modifier = Modifier
-                                                .size(15.dp)
-                                                .padding(end = 2.dp)
-                                        )
-
-                                        Text(
-                                            text = "TOTAL INCOME",
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = LightSurface
-                                        )
-                                    }
+                                    Icon(
+                                        imageVector = Icons.Default.CalendarMonth,
+                                        contentDescription = null,
+                                        tint = BrightGray,
+                                        modifier = Modifier
+                                            .size(14.dp)
+                                            .padding(end = 2.dp)
+                                    )
 
                                     Text(
-                                        text = "+$totalBalanceForMonth",
-                                        fontSize = 16.sp,
+                                        text = currentMonthYear,
+                                        fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = IncomeGreen
+                                        color = BrightGray,
                                     )
-
                                 }
-
-
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(4.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ){
-                                    Column(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(20))
-                                            .background(Color.White.copy(alpha = 0.15f))
-                                            .padding(horizontal = 12.dp)
-                                            .width(100.dp),
-
-                                        verticalArrangement = Arrangement.Center
-
-                                    ){
-                                        Row(
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier
-                                        ){
-                                            Icon(
-                                                imageVector = Icons.Default.Payments,
-                                                contentDescription = null,
-                                                tint = LightGray,
-                                                modifier = Modifier
-                                                    .size(12.dp)
-                                                    .padding(end = 2.dp)
-                                            )
-
-                                            Text(
-                                                text = "THIS MONTH",
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = LightGray
-                                            )
-                                        }
-
-                                        Text(
-                                            text = (state.totalIncome/100).toDouble().toCurrencyString(state.defaultCurrency),
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = LightSurface
-                                        )
-
-                                        Text(
-                                            text = "",
-                                            fontSize = 8.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = LightGray
-                                        )
-
-                                    }
-
-                                    VerticalDivider(
-                                        thickness = 1.dp,
-                                        modifier = Modifier.height(70.dp),
-                                        color = Color.White.copy(alpha = 0.2f)
-                                    )
-
-                                    Column(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(20))
-                                            .background(Color.White.copy(alpha = 0.15f))
-                                            .padding(horizontal = 12.dp)
-                                            .width(100.dp),
-
-                                        verticalArrangement = Arrangement.Center
-
-                                    ){
-                                        Row(
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier
-                                        ){
-                                            Icon(
-                                                imageVector = Icons.Default.SouthWest,
-                                                contentDescription = null,
-                                                tint = IncomeGreen,
-                                                modifier = Modifier
-                                                    .size(12.dp)
-                                                    .padding(end = 2.dp)
-                                            )
-
-                                            Text(
-                                                text = "CARRIED",
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = IncomeGreen
-                                            )
-                                        }
-
-                                        Text(
-                                            text = "+" + (state.openingBalance/100).toDouble().toCurrencyString(state.defaultCurrency),
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = IncomeGreen
-                                        )
-
-                                        Text(
-                                            text = surplusMonth?.let { "$it surplus" } ?: "No carryover",
-                                            fontSize = 8.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = LightGray
-                                        )
-
-                                    }
-                                }
-
 
                             }
 
-                            HorizontalDivider(
-                                modifier = Modifier.padding(top = 16.dp, bottom = 16.dp),
-                                color = Color.White.copy(alpha = 0.2f) // Optional: makes the divider blend better with the gradient
+                            Text(
+                                text = budgetAvailableToSpent,
+                                style = MaterialTheme.typography.headlineLarge,
+                                color = LightSurface,
+                                fontWeight = FontWeight.Bold
                             )
+
+                            Text(
+                                text = "of $totalAllocatedAmount this Month",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = LightGray
+                            )
+
+                            if(state.isUnAllocatedAmountLeft){
+
+                                val isOverspentWithUnallocated = state.budgetUsedPercentage >= BigDecimal(100)
+
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(40))
+                                        .background(color = if (isOverspentWithUnallocated)
+                                            ExpenseRed.copy(alpha = 0.22f)
+                                        else
+                                            Color.Red.copy(alpha = 0.14f))
+                                        .clickable {
+                                            Toast.makeText(context, "Unallocated Amount Clicked", Toast.LENGTH_SHORT).show()
+                                        }
+                                        .padding(horizontal = 6.dp)
+
+                                ) {
+
+                                    Icon(
+                                        imageVector = Icons.Default.WarningAmber,
+                                        contentDescription = null,
+                                        tint = if (isOverspentWithUnallocated) ExpenseRed else Color(0xFFFFDB58),
+                                        modifier = Modifier
+                                            .size(14.dp)
+                                            .padding(end = 2.dp)
+                                    )
+
+
+                                    Text(
+                                        text = if (isOverspentWithUnallocated)
+                                            "$unAllocatedAmount Unassigned — Reassign to Cover Overspend"
+                                        else
+                                            "$unAllocatedAmount Unallocated - Tap to Assign",
+                                        fontSize = if (isOverspentWithUnallocated) 10.sp else 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = LightSurface,
+                                        modifier = Modifier.clickable{
+                                            Toast.makeText(context, "Unallocated Amount Clicked", Toast.LENGTH_SHORT).show()
+                                        }
+
+                                    )
+                                }
+
+                            }
+                        }
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(top = 16.dp, bottom = 16.dp),
+                            color = Color.White.copy(alpha = 0.2f) // Optional: makes the divider blend better with the gradient
+                        )
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(20))
+                                .background(Color.White.copy(alpha = 0.15f))
+                                .padding(12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ){
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                // Income Column Styling
-                                Column {
-                                    Text(
-                                        text = "SPENT",
-                                        fontSize = 12.sp,
-                                        color = LightGray
+                                verticalAlignment = Alignment.CenterVertically,
+                            ){
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(4.dp)
+
+                                ){
+                                    Icon(
+                                        imageVector = Icons.Default.AccountBalanceWallet,
+                                        contentDescription = null,
+                                        tint = IncomeGreen,
+                                        modifier = Modifier
+                                            .size(15.dp)
+                                            .padding(end = 2.dp)
                                     )
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Default.ArrowDownward,
-                                            contentDescription = "Spent",
-                                            tint = ExpenseRed,
-                                            modifier = Modifier.size(16.dp)
-                                        )
 
-                                        Spacer(modifier = Modifier.width(4.dp))
-
-                                        Text(
-                                            text = "-$amountSpentFromAllocated",
-                                            fontSize = 20.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = LightSurface
-                                        )
-                                    }
+                                    Text(
+                                        text = "TOTAL INCOME",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = LightSurface
+                                    )
                                 }
 
-                                // Expense Column Styling
+                                Text(
+                                    text = "+$totalBalanceForMonth",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = IncomeGreen
+                                )
+
+                            }
+
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ){
                                 Column(
-                                    horizontalAlignment = Alignment.End
-                                ) {
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(20))
+                                        .background(Color.White.copy(alpha = 0.15f))
+                                        .padding(horizontal = 12.dp)
+                                        .width(100.dp),
+
+                                    verticalArrangement = Arrangement.Center
+
+                                ){
+                                    Row(
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                    ){
+                                        Icon(
+                                            imageVector = Icons.Default.Payments,
+                                            contentDescription = null,
+                                            tint = LightGray,
+                                            modifier = Modifier
+                                                .size(12.dp)
+                                                .padding(end = 2.dp)
+                                        )
+
+                                        Text(
+                                            text = "THIS MONTH",
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = LightGray
+                                        )
+                                    }
+
                                     Text(
-                                        text = "ALLOCATED",
-                                        fontSize = 12.sp,
+                                        text = state.totalIncome.toMajorUnits().toCurrencyString(state.defaultCurrency),
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = LightSurface
+                                    )
+
+                                    Text(
+                                        text = "",
+                                        fontSize = 8.sp,
+                                        fontWeight = FontWeight.Bold,
                                         color = LightGray
                                     )
 
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                }
+
+                                VerticalDivider(
+                                    thickness = 1.dp,
+                                    modifier = Modifier.height(70.dp),
+                                    color = Color.White.copy(alpha = 0.2f)
+                                )
+
+                                Column(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(20))
+                                        .background(Color.White.copy(alpha = 0.15f))
+                                        .padding(horizontal = 12.dp)
+                                        .width(100.dp),
+
+                                    verticalArrangement = Arrangement.Center
+
+                                ){
+                                    Row(
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                    ){
                                         Icon(
-                                            imageVector = Icons.Default.ArrowUpward,
-                                            contentDescription = "Expense Down", // Updated content description
+                                            imageVector = Icons.Default.SouthWest,
+                                            contentDescription = null,
                                             tint = IncomeGreen,
-                                            modifier = Modifier.size(16.dp)
+                                            modifier = Modifier
+                                                .size(12.dp)
+                                                .padding(end = 2.dp)
                                         )
-                                        Spacer(modifier = Modifier.width(4.dp))
 
                                         Text(
-                                            text = "+$totalAllocatedAmount",
-                                            fontSize = 20.sp,
+                                            text = "CARRIED",
+                                            fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = IncomeGreen
                                         )
                                     }
-                                }
-                            }
 
-                            Spacer(modifier = Modifier.height(5.dp))
-
-                            Column(
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
                                     Text(
-                                        text = "Budget Used",
+                                        text = "+" + state.openingBalance.toMajorUnits().toCurrencyString(state.defaultCurrency),
+                                        fontSize = 15.sp,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 12.sp,
+                                        color = IncomeGreen
+                                    )
+
+                                    Text(
+                                        text = surplusMonth?.let { "$it surplus" } ?: "No carryover",
+                                        fontSize = 8.sp,
+                                        fontWeight = FontWeight.Bold,
                                         color = LightGray
                                     )
 
-                                    Text(
-                                        text = "${"%.1f".format(state.budgetUsedPercentage)}%",
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = budgetStatusColor,
-                                        fontSize = 12.sp,
-                                    )
                                 }
-
-                                LinearProgressIndicator(
-                                    progress = { (state.budgetUsedPercentage / 100f).coerceIn(0f, 1f) },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 2.dp, bottom = 10.dp)
-                                        .height(9.dp)
-                                        .clip(RoundedCornerShape(50)),
-                                    color = budgetStatusColor,
-                                    trackColor = LightNavInactive,
-                                    strokeCap = StrokeCap.Butt, // Natively rounds the ends of the progress bar
-                                    gapSize = 0.dp, // Removes the Material 3 gap
-                                    drawStopIndicator = {} // Removes the Material 3 stop indicator
-                                )
-
                             }
 
+
                         }
-                    }
-                }
 
-
-            }
-
-            //? Daily Expense
-
-            item {
-                Column() {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "Recent Transaction",
-                            fontWeight = FontWeight.Bold
+                        HorizontalDivider(
+                            modifier = Modifier.padding(top = 16.dp, bottom = 16.dp),
+                            color = Color.White.copy(alpha = 0.2f) // Optional: makes the divider blend better with the gradient
                         )
 
-                        TextButton(
-                            onClick = { },
-                        ) {
-                            Text(
-                                text = "View All",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Primary
-                            )
-                        }
-                    }
-
-                }
-            }
-
-
-            //? Daily Transactions Shown If Transaction is Done
-            if(state.isTransaction){
-                items(
-                    items = state.recentTransaction,
-                    key = { it.transactionId }
-                ) { transaction ->
-
-                    val category = categoryFromId(transaction.categoryId)
-
-                    val isIncome = transaction.type == TransactionType.INCOME
-
-                    val displayCategory = category
-                        ?: if (isIncome) ExpIncCategory.IncomeCategory.Other else ExpIncCategory.ExpenseCategory.Misc
-
-
-                    val formattedAmount = (transaction.amount / 100.0)
-                        .toCurrencyString(transaction.currencyCode)
-
-
-
-                    val categoryTitle = category?.title
-                        ?: if (transaction.type == TransactionType.INCOME) "Income" else "Uncategorized"
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = LightSurface
-                        ),
-                        elevation = CardDefaults.cardElevation(
-                            defaultElevation = 4.dp
-                        )
-                    ) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-
-                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                // TODO: Make Changes in This,
-                                // TODO: Make the Create Separate Code for Viewing Icon here
-                                CategoryIconBox(category = displayCategory, isSelected = false, onClick = {  })
-
-                                Column {
-                                    Text(
-                                        text = transaction.note?.takeIf { it.isNotBlank() } ?: categoryTitle,
-                                        fontWeight = FontWeight.Bold
+                            // Income Column Styling
+                            Column {
+                                Text(
+                                    text = "SPENT",
+                                    fontSize = 12.sp,
+                                    color = LightGray
+                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDownward,
+                                        contentDescription = "Spent",
+                                        tint = ExpenseRed,
+                                        modifier = Modifier.size(16.dp)
                                     )
 
+                                    Spacer(modifier = Modifier.width(4.dp))
+
                                     Text(
-                                        text = "$categoryTitle • ${formatTransactionTime(transaction.occurredAt)}",
-                                        fontSize = 10.sp
+                                        text = "-$amountSpentFromAllocated",
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = LightSurface
                                     )
                                 }
                             }
 
-
-                            Text(
-                                text = if (isIncome) "+$formattedAmount" else "-$formattedAmount",
-                                fontWeight = FontWeight.Bold,
-                                color = if (isIncome) IncomeGreen else ExpenseRed
-                            )
-                        }
-                    }
-
-                }
-            }
-            else{
-                item{
-                    ElevatedCard(
-                        elevation = CardDefaults.cardElevation(
-                            defaultElevation = 6.dp
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-
-                        colors = CardDefaults.cardColors(
-                            containerColor = LightSurface
-                        )
-
-
-                    ){
-                        Column(
-                            modifier = Modifier
-                                .padding(25.dp)
-                                .fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-
-                            Box(
-                                modifier = Modifier
-                                    .size(60.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(Primary.copy(alpha = 0.15f)),
-
-                                contentAlignment = Alignment.Center
-
-                            ){
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
-                                    contentDescription = null,
-                                    tint= PrimaryLight,
-                                    modifier = Modifier.size(32.dp)
-
-                                )
-                            }
-
-                            Text(
-                                text = "Add Transaction",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-
-                            Text(
-                                text = "Tap the + button below to log your first transaction of the month",
-                                fontSize = 10.sp,
-                                textAlign = TextAlign.Center,
-                                lineHeight = 18.sp,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 32.dp)
-                            )
-
-                        }
-
-                    }
-                }
-
-            }
-
-
-            //? Quick Add Button
-
-            item{
-                Column(
-                    horizontalAlignment = Alignment.Start,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 20.dp)
-                ){
-                    Text(
-                        text = "Quick Add",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    LazyRow(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(100.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(end = 16.dp)
-                    ) {
-                        items(allExpenseCategories){ category ->
-
+                            // Expense Column Styling
                             Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ){
-                                CategoryIconBox(
-                                    category = category,
-                                    isSelected = false,//category == quickSelectedCategory,
-                                    onClick = {
-                                        // quickSelectedCategory = category
-                                        onQuickSelect(category)
+                                horizontalAlignment = Alignment.End
+                            ) {
+                                Text(
+                                    text = "ALLOCATED",
+                                    fontSize = 12.sp,
+                                    color = LightGray
+                                )
 
-                                    }
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowUpward,
+                                        contentDescription = "Expense Down", // Updated content description
+                                        tint = IncomeGreen,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+
+                                    Text(
+                                        text = "+$totalAllocatedAmount",
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = IncomeGreen
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(5.dp))
+
+                        Column(
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Budget Used",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp,
+                                    color = LightGray
                                 )
 
                                 Text(
-                                    text = category.title.split(" ").firstOrNull() ?: "",
-                                    fontSize = 11.sp,
-                                    color = LightTextSecondary
+                                    text = "${"%.1f".format(state.budgetUsedPercentage)}%",
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = budgetStatusColor,
+                                    fontSize = 12.sp,
                                 )
                             }
 
+                            LinearProgressIndicator(
+                                progress = { (state.budgetUsedPercentage.toFloat() / 100f).coerceIn(0f, 1f) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 2.dp, bottom = 10.dp)
+                                    .height(9.dp)
+                                    .clip(RoundedCornerShape(50)),
+                                color = budgetStatusColor,
+                                trackColor = LightNavInactive,
+                                strokeCap = StrokeCap.Butt, // Natively rounds the ends of the progress bar
+                                gapSize = 0.dp, // Removes the Material 3 gap
+                                drawStopIndicator = {} // Removes the Material 3 stop indicator
+                            )
+
                         }
+
                     }
+                }
+            }
+
+
+        }
+
+        //? Daily Expense
+
+        item {
+            Column() {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Recent Transaction",
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    TextButton(
+                        onClick = { },
+                    ) {
+                        Text(
+                            text = "View All",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Primary
+                        )
+                    }
+                }
+
+            }
+        }
+
+
+        //? Daily Transactions Shown If Transaction is Done
+        if(state.isTransaction){
+            items(
+                items = state.recentTransaction,
+                key = { it.transactionId }
+            ) { transaction ->
+
+                val category = categoryFromId(transaction.categoryId)
+
+                val isIncome = transaction.type == TransactionType.INCOME
+
+                val displayCategory = category
+                    ?: if (isIncome) ExpIncCategory.IncomeCategory.Other else ExpIncCategory.ExpenseCategory.Misc
+
+
+
+                val formattedAmount = transaction.amount
+                    .toMajorUnits()
+                    .toCurrencyString(transaction.currencyCode)
+
+
+
+                val categoryTitle = category?.title
+                    ?: if (transaction.type == TransactionType.INCOME) "Income" else "Uncategorized"
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = LightSurface
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 4.dp
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            // TODO: Make Changes in This,
+                            // TODO: Make the Create Separate Code for Viewing Icon here
+                            CategoryIconBox(category = displayCategory, isSelected = false, onClick = {  })
+
+                            Column {
+                                Text(
+                                    text = transaction.note?.takeIf { it.isNotBlank() } ?: categoryTitle,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                Text(
+                                    text = "$categoryTitle • ${formatTransactionTime(transaction.occurredAt)}",
+                                    fontSize = 10.sp
+                                )
+                            }
+                        }
+
+
+                        Text(
+                            text = if (isIncome) "+$formattedAmount" else "-$formattedAmount",
+                            fontWeight = FontWeight.Bold,
+                            color = if (isIncome) IncomeGreen else ExpenseRed
+                        )
+                    }
+                }
+
+            }
+        }
+        else{
+            item{
+                ElevatedCard(
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 6.dp
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+
+                    colors = CardDefaults.cardColors(
+                        containerColor = LightSurface
+                    )
+
+
+                ){
+                    Column(
+                        modifier = Modifier
+                            .padding(25.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+
+                        Box(
+                            modifier = Modifier
+                                .size(60.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Primary.copy(alpha = 0.15f)),
+
+                            contentAlignment = Alignment.Center
+
+                        ){
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
+                                contentDescription = null,
+                                tint= PrimaryLight,
+                                modifier = Modifier.size(32.dp)
+
+                            )
+                        }
+
+                        Text(
+                            text = "Add Transaction",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+
+                        Text(
+                            text = "Tap the + button below to log your first transaction of the month",
+                            fontSize = 10.sp,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 18.sp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 32.dp)
+                        )
+
+                    }
+
                 }
             }
 
         }
+
+
+        //? Quick Add Button
+
+        item{
+            Column(
+                horizontalAlignment = Alignment.Start,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp)
+            ){
+                Text(
+                    text = "Quick Add",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(end = 16.dp)
+                ) {
+                    items(allExpenseCategories){ category ->
+
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ){
+                            CategoryIconBox(
+                                category = category,
+                                isSelected = false,//category == quickSelectedCategory,
+                                onClick = {
+                                    // quickSelectedCategory = category
+                                    onQuickSelect(category)
+
+                                }
+                            )
+
+                            Text(
+                                text = category.title.split(" ").firstOrNull() ?: "",
+                                fontSize = 11.sp,
+                                color = LightTextSecondary
+                            )
+                        }
+
+                    }
+                }
+            }
+        }
+
     }
+}
 
 
 fun getInitials(name : String) : String {
@@ -882,4 +897,3 @@ fun HomeScreenPreview() {
         }
     }
 }
-

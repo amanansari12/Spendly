@@ -19,18 +19,23 @@ import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.model.categoryFromId
 import com.amanansari.spendly.onBoarding.viewmodel.AllocationRow
 import com.amanansari.spendly.utils.detectDefaultCurrencyInfo
+import kotlinx.coroutines.flow.Flow
 import java.time.YearMonth
+import javax.inject.Inject
 import kotlin.math.roundToLong
 
 
-class OnboardingRepository(
+class OnboardingRepository @Inject constructor(
     private val database : SpendlyDatabase,
     private val userDao: UserDao,
     private val budgetDao: BudgetDao,
     private val transactionDao: TransactionDao,
     private val budgetAllocationDao : BudgetAllocationDao,
-    private val dataStoreManager: DataStoreManager
+    private val dataStoreManager: DataStoreManager,
+    private val userRepository: UserRepository
 ) {
+
+    fun getUser(): Flow<UserEntity?> = userRepository.getUser()
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun completeOnboarding(user : UserEntity,
@@ -40,13 +45,13 @@ class OnboardingRepository(
     ){
 
         val currentMonthKey = YearMonth.now().toString() // e.g. "2026-07"
-        val totalAllocated = allocations.sumOf { it.amount.times(100).roundToLong() }
+        val totalAllocated = allocations.sumOf { it.amount }
         val initialBudget = BudgetEntity(
             userId = user.userId,
             monthKey = currentMonthKey,
             openingBalance = 0L,
             totalIncome = initialAmount,
-            allocatedAmount = initialAmount,
+            allocatedAmount = totalAllocated,
             closingBalance = initialAmount - totalAllocated,
             copiedFromMonthKey = null,
             isAutoCopied = false
@@ -58,7 +63,7 @@ class OnboardingRepository(
                 userId = user.userId,
                 monthKey = currentMonthKey,
                 categoryId = row.category.id,
-                allocatedAmount = row.amount.times(100).roundToLong(),
+                allocatedAmount = row.amount,
                 isCustomised = row.isCustomised,
                 amountSpent = 0L,
 
