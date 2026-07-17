@@ -34,48 +34,54 @@ import androidx.compose.ui.unit.sp
 import com.amanansari.spendly.ui.theme.Platinum
 import com.amanansari.spendly.ui.theme.PrimaryDark
 
+
+private const val MAX_AMOUNT_LENGTH = 12
+private val amountRegex = Regex("^\\d{0,10}(\\.\\d{0,2})?$")
+
 @Composable
 fun AmountInputField(
-    colorProvided : Color?
-){
-
-    var amount by remember { mutableStateOf(TextFieldValue("")) }
-
+    amount: TextFieldValue,
+    onAmountChange: (String) -> Unit,
+    currencySymbol: String,
+    colorProvided: Color = PrimaryDark
+) {
     Box(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center
-    ){
+    ) {
         Column(
             modifier = Modifier.width(IntrinsicSize.Min),
-            horizontalAlignment = Alignment.CenterHorizontally,
-
-            ) {
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "$",
+                    text = currencySymbol,
                     fontWeight = FontWeight.Bold,
                     fontSize = 50.sp,
-                    color = colorProvided ?: PrimaryDark,
+                    color = colorProvided
+                )
 
-                    )
-                Spacer(Modifier.width(15.dp))
+                Spacer(modifier = Modifier.width(15.dp))
 
                 BasicTextField(
                     value = amount,
                     onValueChange = { newValue ->
 
-//                        val newText = newValue.text
-                         amount = newValue
+                        val newText = newValue.text
+                        if (newText.length <= MAX_AMOUNT_LENGTH && newText.matches(amountRegex)) {
+
+                            onAmountChange(newText)
+                        }
 
                     },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number
                     ),
-                    cursorBrush = SolidColor(PrimaryDark),
+                    cursorBrush = SolidColor(colorProvided),
                     textStyle = TextStyle(
                         fontSize = 38.sp,
                         fontWeight = FontWeight.Bold,
@@ -85,10 +91,15 @@ fun AmountInputField(
                         .widthIn(min = 120.dp)
                         .heightIn(min = 56.dp),
                     decorationBox = { innerTextField ->
-                        Box(modifier = Modifier.heightIn(min = 56.dp).padding(4.dp),
-                            contentAlignment = Alignment.CenterStart) {
+                        Box(
+                            modifier = Modifier
+                                .heightIn(min = 56.dp)
+                                .padding(4.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
                             if (amount.text.isEmpty()) {
-                                Text(text = "0.00",
+                                Text(
+                                    text = "0.00",
                                     fontSize = 38.sp,
                                     lineHeight = 44.sp,
                                     fontWeight = FontWeight.Bold,
@@ -98,21 +109,16 @@ fun AmountInputField(
                             innerTextField()
                         }
                     }
-
-
                 )
-
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             HorizontalDivider(
-                modifier = Modifier.fillMaxWidth(), // <-- now matches the Row above it exactly
+                modifier = Modifier.fillMaxWidth(),
                 thickness = 2.dp,
-                color = colorProvided ?: PrimaryDark
+                color = colorProvided
             )
-
-
         }
     }
 }

@@ -31,7 +31,7 @@ interface BudgetAllocationDao {
     @Query(
         """
         UPDATE budget_allocation
-        SET amountSpent = allocatedAmount - :amount,
+        SET amountSpent = amountSpent + :amount,
             updatedAt = :updatedAt,
             rowVersion = rowVersion + 1
         WHERE userId = :userId AND categoryId = :categoryId AND monthKey = :monthKey AND deletedAt IS NULL

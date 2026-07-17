@@ -52,6 +52,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.amanansari.spendly.components.AmountInputField
 import com.amanansari.spendly.model.CurrencyInfo
 import com.amanansari.spendly.onBoarding.state.UserInfoUiState
 import com.amanansari.spendly.onBoarding.viewmodel.UserInfoStep
@@ -126,83 +127,8 @@ fun InitialBudgetScreen(
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ){
-            Column(
-                modifier = Modifier.width(IntrinsicSize.Min),
-                horizontalAlignment = Alignment.CenterHorizontally,
-
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    Text(
-                        text = state.currency.symbol,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 50.sp,
-                        color = PrimaryDark,
-
-                        )
-                    Spacer(Modifier.width(15.dp))
-
-                    BasicTextField(
-                        value = state.amountFieldValue,
-                        onValueChange = { newValue ->
-
-                            val newText = newValue.text
-                            if (newText.length <= MAX_AMOUNT_LENGTH && newText.matches(amountRegex)) {
-
-                                onAmountChange(newText)
-                            }
-
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number
-                        ),
-                        cursorBrush = SolidColor(PrimaryDark),
-                        textStyle = TextStyle(
-                            fontSize = 38.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        ),
-                        modifier = Modifier
-                            .widthIn(min = 120.dp)
-                            .heightIn(min = 56.dp),
-                        decorationBox = { innerTextField ->
-                            Box(modifier = Modifier.heightIn(min = 56.dp).padding(4.dp),
-                                contentAlignment = Alignment.CenterStart) {
-                                if (state.amountFieldValue.text.isEmpty()) {
-                                    Text(text = "0.00",
-                                        fontSize = 38.sp,
-                                        lineHeight = 44.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Platinum
-                                    )
-                                }
-                                innerTextField()
-                            }
-                        }
-
-
-                    )
-
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                HorizontalDivider(
-                    modifier = Modifier.fillMaxWidth(), // <-- now matches the Row above it exactly
-                    thickness = 2.dp,
-                    color = PrimaryDark
-                )
-
-
-            }
-        }
+        //> Amount Field Input
+        AmountInputField(state.amountFieldValue, onAmountChange, state.currency.symbol)
 
         Spacer(modifier = Modifier.height(40.dp))
 

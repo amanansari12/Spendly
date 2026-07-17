@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.amanansari.spendly.MainScreen
@@ -30,8 +31,6 @@ fun AppNavigation(
     val isOnboardingCompleted = isOnboardingCompletedState
 
     if (isOnboardingCompleted == true) {
-
-
 
         MainScreen()
 

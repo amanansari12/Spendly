@@ -23,7 +23,11 @@ import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.model.allExpenseCategories
 import com.amanansari.spendly.model.allIncomeCategories
 import com.amanansari.spendly.model.categoryFromId
+import com.amanansari.spendly.onBoarding.state.BudgetAllocationUiState
+import com.amanansari.spendly.onBoarding.state.IncomeSourceUistate
+import com.amanansari.spendly.onBoarding.state.UserInfoUiState
 import com.amanansari.spendly.utils.detectDefaultCurrencyInfo
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -31,6 +35,7 @@ import java.math.BigDecimal
 import java.util.Currency
 import java.util.Locale
 import java.util.UUID
+import javax.inject.Inject
 import kotlin.math.roundToLong
 
 enum class UserInfoStep{
@@ -54,8 +59,8 @@ data class AllocationRow(
     val isCustomised: Boolean = false
 )
 
-class OnboardingViewModel(
-    private val userRepository: UserRepository,
+@HiltViewModel
+class OnboardingViewModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val dataStoreManager: DataStoreManager
     ) : ViewModel() {
@@ -223,7 +228,7 @@ class OnboardingViewModel(
 
     val isOnboardingCompleted = dataStoreManager.onboardingState.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = SharingStarted.Eagerly,
         initialValue = null
     )
 
@@ -231,11 +236,41 @@ class OnboardingViewModel(
        The Name will be fetched from the MainScreenViewModel
      */
 
-    val user = userRepository.getUser().stateIn(
+    val user = onboardingRepository.getUser().stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = SharingStarted.Eagerly,
         initialValue = null
     )
+
+
+    //> UI States — one per screen, built the same way TransactionViewModel.uiState is
+
+    val userInfoUiState: UserInfoUiState
+        get() = UserInfoUiState(
+            name = name,
+            email = email,
+            initialAmount = initialAmount,
+            amountFieldValue = amountFieldValue,
+            currentUserInfoStep = userInfoStep,
+            currency = currency
+        )
+
+    val incomeSourceUiState: IncomeSourceUistate
+        get() = IncomeSourceUistate(
+            availableIncomeSource = availableIncomeSource,
+            selectedIncomeSourceId = selectedIncomeSourceId
+        )
+
+    val budgetAllocationUiState: BudgetAllocationUiState
+        get() = BudgetAllocationUiState(
+            totalIncome = initialAmount,
+            allocations = allocations,
+            availableCategoriesForPicker = availableCategoriesForPicker,
+            isCategoryPickerVisible = isCategoryPickerVisible,
+            selectedCategoryIds = selectedCategoryIds
+        )
+
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun completeOnboardingStep(){
