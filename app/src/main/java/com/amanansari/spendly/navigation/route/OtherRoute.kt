@@ -8,7 +8,7 @@ data class AddTransaction(val categoryId : String? = null){
 }
 
 @Serializable
-object Transactions
+object TransactionHistory
 
 @Serializable
 object EditBudget

@@ -8,12 +8,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -21,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,6 +56,7 @@ import com.amanansari.spendly.ui.theme.LightNavInactive
 import com.amanansari.spendly.ui.theme.LightSurface
 import com.amanansari.spendly.ui.theme.Primary
 import com.amanansari.spendly.ui.theme.SpendlyTheme
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -61,8 +66,8 @@ fun MainScreen(){
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    var selectedCategory  by remember { mutableStateOf< ExpIncCategory?>(null) }
-    var selectedDate by remember { mutableStateOf<Long?>(System.currentTimeMillis()) }
+
+    val homePagerState = rememberPagerState(pageCount = { 2 })
 
     val bottomBarRoutes = remember {
         bottomBarItems.map { it.route::class.qualifiedName }
@@ -72,15 +77,15 @@ fun MainScreen(){
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = Color.White,
-        topBar = {TopBar(navController)},
+        topBar = {TopBar(navController, homePagerState)},
         bottomBar = {
             if(currentRoute in bottomBarRoutes){
-                BottomNavBar(navController)
+                BottomNavBar(navController, homePagerState)
             }
         },
 
         floatingActionButton = {
-            if(currentRoute == Home::class.qualifiedName){
+            if(currentRoute == Home::class.qualifiedName && homePagerState.currentPage == 0){
                 FloatingActionBtn(
                     onClick = {
                         navController.navigate(AddTransaction())
@@ -96,10 +101,7 @@ fun MainScreen(){
         MainNavGraph(
             navController = navController,
             paddingValues = paddingValues,
-            onCategorySelected = {
-                selectedCategory = it
-                navController.navigate(AddTransaction)
-            },
+            homePagerState = homePagerState,
         )
 
 
@@ -111,16 +113,20 @@ fun MainScreen(){
 
 //? Bottom APP Bar
 @Composable
-fun BottomNavBar(navController: NavHostController){
+fun BottomNavBar(navController: NavHostController, homePagerState: PagerState){
 
-    NavigationBar(
+    val scope = rememberCoroutineScope()
+
+
+    CompositionLocalProvider(LocalRippleConfiguration provides null){
+        NavigationBar(
             modifier = Modifier
-                    .clip(RoundedCornerShape(24.dp))
-                    .shadow(10.dp, RoundedCornerShape(24.dp)),
+                .clip(RoundedCornerShape(24.dp))
+                .shadow(10.dp, RoundedCornerShape(24.dp)),
             containerColor = LightSurface,
             contentColor = Primary,
             tonalElevation = 8.dp
-    ) {
+        ) {
             //? It gives you the current screen entry from the navigation back stack
             //? currentBackStackEntryAsState() always points to the top of this stack
             val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -128,9 +134,9 @@ fun BottomNavBar(navController: NavHostController){
             //? Extracts the route (screen name) of the current destination
             val currentRoute = navBackStackEntry?.destination?.route
 
-        bottomBarItems.forEach { screen ->
+            bottomBarItems.forEach { screen ->
 
-            val isSelected = currentRoute == screen.route::class.qualifiedName
+                val isSelected = currentRoute == screen.route::class.qualifiedName
 
                 NavigationBarItem(
                     icon = {
@@ -157,12 +163,22 @@ fun BottomNavBar(navController: NavHostController){
                                 text = screen.title,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (currentRoute == screen.route) Primary else LightNavInactive
+                                color = if (isSelected) Primary else LightNavInactive
                             )
                         }
                     },
-                selected = isSelected,
+                    selected = isSelected,
                     onClick = {
+
+                        // If the user taps Home, always slide the pager back
+                        // to page 0. Without this, tapping Home while the
+                        // pager is sitting on Transaction History (page 1)
+                        // does nothing, because "Home" is already the
+                        // current nav route as far as NavController knows.
+                        if (screen.route == Home) {
+                            scope.launch { homePagerState.animateScrollToPage(0) }
+                        }
+
                         navController.navigate(screen.route) {
                             //* Pop up to the start destination of the graph to
                             //* avoid building up a large stack of destinations
@@ -187,7 +203,10 @@ fun BottomNavBar(navController: NavHostController){
                 )
 
             }
+        }
     }
+
+
 
 }
 

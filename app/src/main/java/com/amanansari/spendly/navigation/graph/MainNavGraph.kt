@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -11,6 +12,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.amanansari.spendly.home.screen.HomeOverviewScreen
 import com.amanansari.spendly.home.screen.HomeScreen
 import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.navigation.route.AddTransaction
@@ -18,6 +20,7 @@ import com.amanansari.spendly.navigation.route.Home
 import com.amanansari.spendly.navigation.route.Analytics
 import com.amanansari.spendly.navigation.route.Budget
 import com.amanansari.spendly.navigation.route.Profile
+import com.amanansari.spendly.navigation.route.TransactionHistory
 import com.amanansari.spendly.transaction.screen.TransactionScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -25,8 +28,9 @@ import com.amanansari.spendly.transaction.screen.TransactionScreen
 fun MainNavGraph(
     navController: NavHostController,
     paddingValues: PaddingValues,
-    onCategorySelected: (ExpIncCategory) -> Unit,
-) {
+    homePagerState: PagerState,
+
+    ) {
 
     NavHost(
         navController = navController,
@@ -35,9 +39,10 @@ fun MainNavGraph(
     ) {
 
         composable<Home>{
-             HomeScreen(onQuickSelect = { category ->
+             HomeOverviewScreen(onQuickSelect = { category ->
                         navController.navigate(AddTransaction(category.id))
-                    }
+                    },
+                 pagerState = homePagerState,
              )
          }
 
@@ -53,6 +58,10 @@ fun MainNavGraph(
 
             )
             
+        }
+
+        composable<TransactionHistory> {
+            Text("Transaction History screen — coming soon")
         }
 
         composable<Budget> {

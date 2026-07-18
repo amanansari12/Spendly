@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Notifications
@@ -49,6 +50,7 @@ import com.amanansari.spendly.navigation.route.Home
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TopBar(navController: NavController,
+           homePagerState: PagerState,
            homeViewModel: HomeViewModel = hiltViewModel()
 ) {
 
@@ -56,7 +58,11 @@ fun TopBar(navController: NavController,
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     when(currentRoute){
-        Home::class.qualifiedName -> HomeTopBar(homeViewModel)
+        Home::class.qualifiedName -> {
+            if (homePagerState.currentPage == 0) {
+                HomeTopBar(homeViewModel)
+            }
+        }
         Analytics::class.qualifiedName -> AnalyticsTopBar()
 
     }

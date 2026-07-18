@@ -101,6 +101,7 @@ private fun Long.toMajorUnits(): BigDecimal = BigDecimal(this).movePointLeft(2)
 @Composable
 fun HomeScreen(
     onQuickSelect: (ExpIncCategory.ExpenseCategory) -> Unit,
+    onViewAll : () -> Unit,
     homeViewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by homeViewModel.uiState.collectAsState()
@@ -108,6 +109,7 @@ fun HomeScreen(
     HomeScreenContent(
         state = state,
         onQuickSelect = onQuickSelect,
+        onViewAll = onViewAll,
     )
 }
 
@@ -116,10 +118,10 @@ fun HomeScreen(
 fun HomeScreenContent(
     state: HomeUiState,
     onQuickSelect: (ExpIncCategory.ExpenseCategory) -> Unit,
-
+    onViewAll: () -> Unit,
     ) {
 
-    val isTransaction = false
+
     val context = LocalContext.current
 
     val currentDate = LocalDate.now()
@@ -603,7 +605,7 @@ fun HomeScreenContent(
                     )
 
                     TextButton(
-                        onClick = { },
+                        onClick = { onViewAll()},
                     ) {
                         Text(
                             text = "View All",
@@ -891,9 +893,9 @@ fun HomeScreenPreview() {
 
     SpendlyTheme {
         HomeScreenContent(
-            state = previewState
-        ) {
-
-        }
+            state = previewState,
+            onQuickSelect = {},
+            onViewAll = {}
+        )
     }
 }
