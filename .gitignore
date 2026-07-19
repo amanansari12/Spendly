@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+.artifacts/
+.idea/planningMode.xml
+.idea/betterCommentsSettings.xml
