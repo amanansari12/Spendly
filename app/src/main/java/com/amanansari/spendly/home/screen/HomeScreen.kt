@@ -642,14 +642,15 @@ fun HomeScreenContent(
                             Text(
                                 text = "Tap to View Budgets",
                                 style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
                             )
                         }
 
                         Icon(
                             Icons.AutoMirrored.Filled.KeyboardArrowRight,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = Primary
                         )
                     }
                 }

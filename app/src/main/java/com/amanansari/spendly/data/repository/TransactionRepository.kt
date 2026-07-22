@@ -1,6 +1,7 @@
 package com.amanansari.spendly.data.repository
 
 import androidx.room.withTransaction
+import com.amanansari.spendly.data.local.dao.AllocatedBudgetPartialDetails
 import com.amanansari.spendly.data.local.dao.BudgetAllocationDao
 import com.amanansari.spendly.data.local.dao.BudgetDao
 import com.amanansari.spendly.data.local.dao.TransactionDao
@@ -18,7 +19,8 @@ class TransactionRepository @Inject constructor(
     private val budgetDao: BudgetDao,
     private val budgetAllocationDao: BudgetAllocationDao,
     private val categoryRepository: CategoryRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val budgetAllocationRepository: BudgetAllocationRepository
 ) {
 
     suspend fun addExpenseTransaction(
@@ -50,6 +52,9 @@ class TransactionRepository @Inject constructor(
     }
 
     fun getUser(): Flow<UserEntity?> = userRepository.getUser()
+
+    fun getAllocatedBudgetPartialDetail(userId: UUID, monthKey: String) : Flow<List<AllocatedBudgetPartialDetails?>>
+    = budgetAllocationRepository.getAllocationsByMonth(userId,monthKey)
 
     suspend fun addTransaction(transaction : TransactionEntity){
         transactionDao.insertTransaction(transaction)

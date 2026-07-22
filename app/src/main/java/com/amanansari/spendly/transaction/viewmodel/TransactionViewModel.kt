@@ -7,10 +7,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.amanansari.spendly.data.local.dao.AllocatedBudgetPartialDetails
 import com.amanansari.spendly.data.local.entity.TransactionEntity
 import com.amanansari.spendly.data.local.entity.TransactionType
 import com.amanansari.spendly.data.local.entity.UserEntity
@@ -20,7 +22,14 @@ import com.amanansari.spendly.transaction.state.TransactionUiState
 import com.amanansari.spendly.utils.detectDefaultCurrencyInfo
 import com.amanansari.spendly.utils.monthKeyFrom
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
@@ -36,6 +45,8 @@ sealed class TransactionCompletionState {
 }
 
 
+@OptIn(ExperimentalCoroutinesApi::class)
+@RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class TransactionViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository
@@ -116,8 +127,34 @@ class TransactionViewModel @Inject constructor(
     }
 
 
+    //>
+    //? The following stores all the budget details for the budget allocated by the user for a given month.
+
+
+    var allocatedBudgets by mutableStateOf<List<AllocatedBudgetPartialDetails>>(emptyList())
+        private set
+
+    init {
+        viewModelScope.launch {
+            combine(
+            user.filterNotNull(),
+            snapshotFlow { date }
+        ) { currentUser, currentDate -> currentUser.userId to monthKeyFrom(currentDate) }
+            .distinctUntilChanged()
+            .flatMapLatest { (userId, monthKey) ->
+                transactionRepository.getAllocatedBudgetPartialDetail(userId, monthKey)
+            }
+            .map { list -> list.filterNotNull() }
+            .collect { list ->
+                allocatedBudgets = list
+            }
+        }
+    }
+
+
 
     val uiState : TransactionUiState
+        @RequiresApi(Build.VERSION_CODES.O)
         get() = TransactionUiState(
                 type = this.type,
                 amountText = this.amountText,
@@ -128,7 +165,8 @@ class TransactionViewModel @Inject constructor(
                 errorMessage = when (val state = completionState) {
                     is TransactionCompletionState.Error -> state.message
                     else -> null
-                }
+                },
+            allocatedBudgets = allocatedBudgets
     )
 
 

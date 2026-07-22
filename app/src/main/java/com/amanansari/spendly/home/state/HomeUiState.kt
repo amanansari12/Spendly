@@ -1,12 +1,13 @@
 package com.amanansari.spendly.home.state
 
 import com.amanansari.spendly.data.local.entity.TransactionEntity
+import com.amanansari.spendly.utils.detectDefaultCurrencyInfo
 import java.math.BigDecimal
 import java.math.RoundingMode
 
 data class HomeUiState(
     val userName : String = "User",
-    val defaultCurrency : String = "INR",
+    val defaultCurrency : String = detectDefaultCurrencyInfo().code,
     val openingBalance : Long = 0L,
     val totalIncome : Long = 0L,
     val totalAllocatedAmount : Long = 0L,

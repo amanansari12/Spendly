@@ -19,6 +19,19 @@ data class AllocationRemaining(
     val amountSpent : Long
 )
 
+  /*>
+  This Data Class Will Store the Partial Details for the
+    DAO funtion 'getAllocationsByMonth'.
+    This will return the important detailed of Budget Allocated to that Month
+   */
+data class AllocatedBudgetPartialDetails(
+    val userId : UUID,
+    val monthKey: String,
+    val categoryId : String,
+    val allocatedAmount : Long,
+    val amountSpent : Long,
+)
+
 @Dao
 interface BudgetAllocationDao {
 
@@ -46,7 +59,7 @@ interface BudgetAllocationDao {
     )
 
     @Query("SELECT * FROM budget_allocation WHERE userId = :userId AND monthKey = :monthKey AND deletedAt IS NULL")
-    fun getAllocationsForBudgetByMonth(userId : UUID, monthKey: String): Flow<List<BudgetAllocationEntity?>>
+    fun getFullAllocationsByMonth(userId : UUID, monthKey: String): Flow<List<BudgetAllocationEntity?>>
 
     @Query("""
         SELECT COALESCE(SUM(amountSpent), 0) AS totalSpent, 
@@ -61,4 +74,21 @@ interface BudgetAllocationDao {
         userId: UUID,
         monthKey: String
     ): Flow<BudgetTotals>
+
+
+    //> Get Allocated Budget
+    @Query(
+        """
+            SELECT 
+            userId, monthKey, categoryId, allocatedAmount, amountSpent
+            FROM budget_allocation
+            WHERE
+            userId = :userId AND
+            monthKey = :monthKey AND
+            deletedAt is NULL
+        """
+    )
+    fun getAllocationsByMonth(userId : UUID, monthKey: String): Flow<List<AllocatedBudgetPartialDetails?>>
+
+
 }

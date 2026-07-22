@@ -44,6 +44,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,14 +54,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.amanansari.spendly.components.AddIncomeExpenseCategoryItem
 import com.amanansari.spendly.data.local.entity.TransactionType
-import com.amanansari.spendly.model.ExpIncCategory
 import com.amanansari.spendly.model.allExpenseCategories
 import com.amanansari.spendly.model.allIncomeCategories
 import com.amanansari.spendly.transaction.state.TransactionUiState
@@ -70,11 +70,8 @@ import com.amanansari.spendly.ui.theme.ExpenseRed
 import com.amanansari.spendly.ui.theme.IncomeGreen
 import com.amanansari.spendly.ui.theme.LightBg
 import com.amanansari.spendly.ui.theme.LightSurface
-import com.amanansari.spendly.ui.theme.LightTextSecondary
+import com.amanansari.spendly.ui.theme.SpendlyTheme
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -136,6 +133,12 @@ fun TransactionScreenContent(
     val scope = rememberCoroutineScope()
     val isExpense = pagerState.currentPage == 0
 
+
+
+    val allocatedExpenseCategories = allExpenseCategories.filter { category ->
+        state.allocatedBudgets.any { it.categoryId == category.id }
+    }
+
     LaunchedEffect(isExpense) {
         onTypeChange(if (isExpense) TransactionType.EXPENSE else TransactionType.INCOME)
     }
@@ -149,11 +152,7 @@ fun TransactionScreenContent(
         TransactionTopBar(
             isExpense = isExpense,
             onCloseClick = onClose,
-            onTypeChanged = { expenseSelected ->
-                scope.launch {
-                    pagerState.animateScrollToPage(if (expenseSelected) 0 else 1)
-                }
-            }
+
         )
 
         if (state.errorMessage != null) {
@@ -183,7 +182,7 @@ fun TransactionScreenContent(
 
                 TransactionForm(
                     state = state,
-                    categories = allExpenseCategories,
+                    categories = allocatedExpenseCategories,
                     onCategoryChange = onCategoryChange,
                     onAmountChange = onAmountChange,
                     onDateChange = onDateChange,
@@ -204,7 +203,7 @@ fun TransactionScreenContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         val accent by animateColorAsState(
             targetValue = if (isExpense) ExpenseRed else IncomeGreen,
@@ -248,7 +247,6 @@ fun TransactionScreenContent(
 @Composable
 fun TransactionTopBar(isExpense: Boolean,
                 onCloseClick: () -> Unit,
-                onTypeChanged: (Boolean) -> Unit,
 ){
     //? Add Transaction Top Level Bar
     Row(
@@ -378,18 +376,23 @@ fun TransactionTypeToggle(
     }
 }
 
+
 @Preview(showBackground = true)
 @Composable
 fun TransactionScreenPreview(){
-    TransactionScreenContent(
-        state = TransactionUiState(),
-        onClose = {},
-        onCategoryChange = {},
-        onAmountChange = {},
-        onNoteChange = {},
-        onDateChange = {},
-        onTypeChange = {},
-        onSubmit = {}
 
-    )
+
+            TransactionScreenContent(
+                state = TransactionUiState(),
+                onClose = {},
+                onCategoryChange = {},
+                onAmountChange = {},
+                onNoteChange = {},
+                onDateChange = {},
+                onTypeChange = {},
+                onSubmit = {}
+            )
+    
+
+
 }
