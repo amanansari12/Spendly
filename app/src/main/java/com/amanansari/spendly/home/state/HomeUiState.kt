@@ -1,5 +1,6 @@
 package com.amanansari.spendly.home.state
 
+import com.amanansari.spendly.data.local.dao.AllocatedBudgetPartialDetails
 import com.amanansari.spendly.data.local.entity.TransactionEntity
 import com.amanansari.spendly.utils.detectDefaultCurrencyInfo
 import java.math.BigDecimal
@@ -14,7 +15,8 @@ data class HomeUiState(
     val amountSpentFromAllocated : Long = 0L,
     val closingBalance : Long = 0L,
     val carriedFromMonth : String = "",
-    val recentTransaction : List<TransactionEntity> = emptyList()
+    val recentTransaction : List<TransactionEntity> = emptyList(),
+    val budgetPartialDetail : List<AllocatedBudgetPartialDetails?> = emptyList()
 ){
     val budgetUsedPercentage: BigDecimal
         get() = if (totalAllocatedAmount > 0L) {

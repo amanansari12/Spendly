@@ -77,6 +77,7 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.ui.graphics)
+    implementation(libs.identity.jvm)
     implementation(libs.kotlinx.serialization.json)
     ksp(libs.androidx.room.compiler)
 

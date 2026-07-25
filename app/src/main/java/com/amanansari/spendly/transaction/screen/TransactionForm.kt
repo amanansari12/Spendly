@@ -1,5 +1,6 @@
 package com.amanansari.spendly.transaction.screen
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,6 +23,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.Icon
@@ -46,6 +51,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,6 +69,8 @@ import com.amanansari.spendly.ui.theme.ExpenseRed
 import com.amanansari.spendly.ui.theme.IncomeGreen
 import com.amanansari.spendly.ui.theme.LightNavInactive
 import com.amanansari.spendly.ui.theme.LightSurface
+import com.amanansari.spendly.ui.theme.Primary
+import com.amanansari.spendly.ui.theme.PrimaryDark
 import com.amanansari.spendly.ui.theme.SpendlyTheme
 import com.amanansari.spendly.ui.theme.WarningBackground
 import com.amanansari.spendly.ui.theme.WarningText
@@ -80,6 +88,7 @@ fun<T : ExpIncCategory> TransactionForm(
     onAmountChange : (String) -> Unit,
     onDateChange: (Long) -> Unit,
     onNoteChange : (String) -> Unit,
+    onViewAllBudgets: () -> Unit,
     accentColor: Color,
 ){
 
@@ -103,7 +112,47 @@ fun<T : ExpIncCategory> TransactionForm(
 
     val categorySelected = categoryFromId(state.categoryId)
 
+    if(categories.isEmpty()){
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Info,
+                contentDescription = null,
+                tint = Primary,
+                modifier = Modifier.size(40.dp)
+            )
 
+            Text(
+                text = "No budget has been allocated yet. \nAdd a budget to see the details. \"",
+                textAlign = TextAlign.Center,
+                color = Color.Gray,
+                fontSize = 13.sp
+            )
+
+            Button(
+                onClick = onViewAllBudgets,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(45.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Primary,
+                    contentColor = Color.White
+                ),
+                border = BorderStroke(1.dp, PrimaryDark)
+
+            ) {
+                Text(text = "Add Budget")
+            }
+
+        }
+    }
+    else{
 
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
@@ -205,6 +254,9 @@ fun<T : ExpIncCategory> TransactionForm(
                         onCategoryChange = onCategoryChange
                     )
 
+
+
+
                     if(state.categoryId.isNotBlank() && state.type == TransactionType.EXPENSE){
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -288,6 +340,8 @@ fun<T : ExpIncCategory> TransactionForm(
 
 
 
+
+    }
 
     }
 }
@@ -435,7 +489,8 @@ fun TransactionFormPreview() {
             onAmountChange = {},
             onDateChange = {},
             onNoteChange = {},
-            accentColor = Color(0xFFE65100)
+            accentColor = Color(0xFFE65100),
+            onViewAllBudgets = {}
         )
     }
 }

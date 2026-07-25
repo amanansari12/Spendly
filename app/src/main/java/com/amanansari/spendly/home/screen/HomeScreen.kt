@@ -49,7 +49,9 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -106,6 +108,7 @@ private fun Long.toMajorUnits(): BigDecimal = BigDecimal(this).movePointLeft(2)
 fun HomeScreen(
     onQuickSelect: (ExpIncCategory.ExpenseCategory) -> Unit,
     onViewAll : () -> Unit,
+    onViewAllBudgets : () -> Unit,
     homeViewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by homeViewModel.uiState.collectAsState()
@@ -114,6 +117,7 @@ fun HomeScreen(
         state = state,
         onQuickSelect = onQuickSelect,
         onViewAll = onViewAll,
+        onViewAllBudgets = onViewAllBudgets
     )
 }
 
@@ -123,6 +127,7 @@ fun HomeScreenContent(
     state: HomeUiState,
     onQuickSelect: (ExpIncCategory.ExpenseCategory) -> Unit,
     onViewAll: () -> Unit,
+    onViewAllBudgets : () -> Unit,
     ) {
 
 
@@ -164,6 +169,15 @@ fun HomeScreenContent(
         ?.month
         ?.getDisplayName(TextStyle.FULL, LocalLocale.current.platformLocale)
 
+    var showBottomSheet by remember { mutableStateOf(false) }
+
+    BudgetInformationModal(
+        showBottomSheet = showBottomSheet,
+        onDismiss = { showBottomSheet = false },
+        partialBudgetDetails = state.budgetPartialDetail,
+        onViewAllBudgets = onViewAllBudgets
+    )
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -176,12 +190,8 @@ fun HomeScreenContent(
         //? We use a Box instead of a Card because making a Card's background transparent
         //? (which is necessary to show our custom gradient) breaks its built-in drop shadow.
         //? A Box with explicit .shadow() and .background() modifiers gives us perfect control.
-        /*TODO: Thinking of Adding a Circular Indicator which shows the remaining Budged
-            and also shows the Used Budged
-            The Used Budged Shows in color according to assigned Color and Arrow comes out
-            and Points to the name and as Allocated Money in Budget Increases then color changes
-        */
-        // Balance Summary Card
+
+        //> Balance Summary Card
         item {
             BoxWithConstraints(
                 modifier = Modifier.fillMaxWidth()
@@ -310,6 +320,7 @@ fun HomeScreenContent(
                                         color = LightSurface,
                                         modifier = Modifier.clickable{
                                             Toast.makeText(context, "Unallocated Amount Clicked", Toast.LENGTH_SHORT).show()
+                                            onViewAllBudgets()
                                         }
 
                                     )
@@ -597,7 +608,7 @@ fun HomeScreenContent(
         item {
             Column() {
                 Button(
-                    onClick = { },
+                    onClick = {showBottomSheet = true},
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(58.dp),
@@ -962,7 +973,8 @@ fun HomeScreenPreview() {
         HomeScreenContent(
             state = previewState,
             onQuickSelect = {},
-            onViewAll = {}
+            onViewAll = {},
+            onViewAllBudgets = {},
         )
     }
 }

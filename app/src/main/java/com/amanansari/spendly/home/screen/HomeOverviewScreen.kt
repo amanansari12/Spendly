@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 fun HomeOverviewScreen(
     onQuickSelect: (ExpIncCategory.ExpenseCategory) -> Unit,
     pagerState: PagerState,
+    onViewAllBudgets : () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
 
@@ -34,7 +35,8 @@ fun HomeOverviewScreen(
                 onViewAll = {
                     // "View All" no longer navigates — it just slides the pager over
                     scope.launch { pagerState.animateScrollToPage(1) }
-                }
+                },
+                onViewAllBudgets = onViewAllBudgets
             )
             1 -> {
                 // TODO: swap this placeholder for your real TransactionHistoryScreen()

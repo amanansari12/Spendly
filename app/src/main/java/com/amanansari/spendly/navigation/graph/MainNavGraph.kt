@@ -8,6 +8,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -43,6 +44,15 @@ fun MainNavGraph(
                         navController.navigate(AddTransaction(category.id))
                     },
                  pagerState = homePagerState,
+                 onViewAllBudgets = {
+                     navController.navigate(Budget){
+                         popUpTo(navController.graph.findStartDestination().id) {
+                             saveState = true
+                         }
+                         launchSingleTop = true
+                         restoreState = true
+                     }
+                 }
              )
          }
 
@@ -54,7 +64,17 @@ fun MainNavGraph(
                     navController.popBackStack()
                 },
 
-                quickSelectedCategoryId = args.categoryId
+                quickSelectedCategoryId = args.categoryId,
+                onViewAllBudgets = {
+                    navController.popBackStack() // leave AddTransaction normally
+                    navController.navigate(Budget){ // then switch tabs, same as BottomNavBar does
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
 
             )
             

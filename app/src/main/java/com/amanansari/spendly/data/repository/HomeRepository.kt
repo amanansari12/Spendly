@@ -1,6 +1,7 @@
 package com.amanansari.spendly.data.repository
 
 import android.util.Printer
+import com.amanansari.spendly.data.local.dao.AllocatedBudgetPartialDetails
 import com.amanansari.spendly.data.local.dao.BudgetAllocationDao
 import com.amanansari.spendly.data.local.dao.BudgetDao
 import com.amanansari.spendly.data.local.dao.BudgetTotals
@@ -21,7 +22,8 @@ class HomeRepository @Inject constructor(
     private val budgetDao: BudgetDao,
     private val budgetAllocationDao: BudgetAllocationDao,
     private val transactionDao: TransactionDao,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val budgetAllocationRepository: BudgetAllocationRepository
 ) {
 
     //* Top Bar
@@ -38,5 +40,9 @@ class HomeRepository @Inject constructor(
     fun getRecentTransactions(userId: UUID): Flow<List<TransactionEntity>> {
         return transactionDao.getRecentTransactions(userId)
     }
+
+
+    fun getAllocatedBudgetPartialDetail(userId: UUID, monthKey: String) : Flow<List<AllocatedBudgetPartialDetails?>>
+            = budgetAllocationRepository.getAllocationsByMonth(userId,monthKey)
 
 }

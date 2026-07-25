@@ -37,9 +37,10 @@ class HomeViewModel @Inject constructor(
                 combine(
                     homeRepository.getBudget(userId, currentMonthKey),
                     homeRepository.getTotalAllocatedAmount(userId, currentMonthKey),
-                    homeRepository.getRecentTransactions(userId)
+                    homeRepository.getRecentTransactions(userId),
+                    homeRepository.getAllocatedBudgetPartialDetail(userId, currentMonthKey)
 
-                ) { budget, allocations, transaction ->
+                ) { budget, allocations, transaction, budgetPartialDetail->
 
                     HomeUiState(
                         // map these onto whatever fields HomeUiState actually has
@@ -51,7 +52,8 @@ class HomeViewModel @Inject constructor(
                         amountSpentFromAllocated = allocations.totalSpent,
                         closingBalance = budget?.closingBalance ?: 0L,
                         carriedFromMonth = budget?.copiedFromMonthKey ?: "",
-                        recentTransaction = transaction
+                        recentTransaction = transaction,
+                        budgetPartialDetail = budgetPartialDetail
                     )
                 }
             }

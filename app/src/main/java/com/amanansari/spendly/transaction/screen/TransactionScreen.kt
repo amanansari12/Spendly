@@ -84,6 +84,7 @@ import kotlinx.coroutines.launch
 fun TransactionScreen(
     transactionViewmodel : TransactionViewModel = hiltViewModel(),
     onClose: () -> Unit,
+    onViewAllBudgets : () -> Unit,
     quickSelectedCategoryId : String? = null
 ){
     LaunchedEffect(quickSelectedCategoryId) {
@@ -128,7 +129,8 @@ fun TransactionScreen(
         onPickMoveFromCategory = { transactionViewmodel.moveFromAndSave(it) },
         onLogOverBudget = { transactionViewmodel.logOverBudgetAndSave() },
         onDismissBudgetModal = { transactionViewmodel.dismissModal() },
-        onErrorShown = { transactionViewmodel.clearError() }
+        onErrorShown = { transactionViewmodel.clearError() },
+        onViewAllBudgets = onViewAllBudgets
     )
 }
 
@@ -149,7 +151,8 @@ fun TransactionScreenContent(
     onPickMoveFromCategory: (String) -> Unit,
     onLogOverBudget: () -> Unit,
     onDismissBudgetModal: () -> Unit,
-    onErrorShown: () -> Unit
+    onErrorShown: () -> Unit,
+    onViewAllBudgets : () -> Unit
     )
 {
 
@@ -230,7 +233,8 @@ fun TransactionScreenContent(
                         onAmountChange = onAmountChange,
                         onDateChange = onDateChange,
                         onNoteChange = onNoteChange,
-                        accentColor = ExpenseRed
+                        accentColor = ExpenseRed,
+                        onViewAllBudgets = onViewAllBudgets
                     )
 
                 } else {
@@ -241,7 +245,8 @@ fun TransactionScreenContent(
                         onAmountChange = onAmountChange,
                         onDateChange = onDateChange,
                         onNoteChange = onNoteChange,
-                        accentColor = IncomeGreen
+                        accentColor = IncomeGreen,
+                        onViewAllBudgets = onViewAllBudgets
                     )
                 }
             }
@@ -260,8 +265,15 @@ fun TransactionScreenContent(
                     .fillMaxWidth()
                     .height(50.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = accent),
-
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = accent,
+                    disabledContainerColor = accent.copy(0.6f)
+                    ),
+                enabled = if (isExpense) {
+                    allocatedExpenseCategories.isNotEmpty()
+                } else{
+                    true
+                }
                 ) {
 
                 Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
@@ -441,6 +453,7 @@ fun TransactionScreenPreview(){
                 onPickMoveFromCategory = {  },
                 onLogOverBudget = {  },
                 onDismissBudgetModal = {},
-                onErrorShown = {}
+                onErrorShown = {},
+                onViewAllBudgets = {}
             )
 }
