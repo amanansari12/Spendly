@@ -91,4 +91,21 @@ interface BudgetAllocationDao {
     fun getAllocationsByMonth(userId : UUID, monthKey: String): Flow<List<AllocatedBudgetPartialDetails?>>
 
 
+    // DAO — one query handles both add and subtract, using a signed amount
+    @Query("""
+    UPDATE budget_allocation
+    SET allocatedAmount = allocatedAmount + :amount,
+        isCustomised = 1,
+        updatedAt = :now,
+        rowVersion = rowVersion + 1
+    WHERE userId = :userId AND monthKey = :monthKey AND categoryId = :categoryId
+""")
+    suspend fun adjustAllocatedAmount(
+        userId: UUID,
+        monthKey: String,
+        categoryId: String,
+        amount: Long, // positive to add, negative to subtract
+        now: Long = System.currentTimeMillis()
+    )
+
 }

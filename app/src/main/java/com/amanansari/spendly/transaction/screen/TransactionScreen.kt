@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -39,6 +40,10 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -63,6 +68,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.amanansari.spendly.data.local.entity.TransactionType
 import com.amanansari.spendly.model.allExpenseCategories
 import com.amanansari.spendly.model.allIncomeCategories
+import com.amanansari.spendly.transaction.state.BudgetModalState
 import com.amanansari.spendly.transaction.state.TransactionUiState
 import com.amanansari.spendly.transaction.viewmodel.TransactionCompletionState
 import com.amanansari.spendly.transaction.viewmodel.TransactionViewModel
@@ -84,15 +90,19 @@ fun TransactionScreen(
         transactionViewmodel.toggleCategoryId(quickSelectedCategoryId)
     }
 
-    // React to completion state changes instead of checking once
-    LaunchedEffect(transactionViewmodel.completionState) {
-        if (transactionViewmodel.completionState == TransactionCompletionState.Success) {
-            onClose()
-        }
-    }
+//    //> React to completion state changes instead of checking once
+//    LaunchedEffect(transactionViewmodel.completionState, transactionViewmodel.budgetModalState) {
+//        if (transactionViewmodel.completionState == TransactionCompletionState.Success
+//            &&
+//            transactionViewmodel.budgetModalState == BudgetModalState.Hidden
+//            ) {
+//            onClose()
+//        }
+//    }
 
     TransactionScreenContent(
         state = transactionViewmodel.uiState,
+        budgetModalState = transactionViewmodel.budgetModalState,
         onClose = onClose,
         onCategoryChange = {
             transactionViewmodel.toggleCategoryId(it)
@@ -111,14 +121,21 @@ fun TransactionScreen(
         },
         onSubmit = {
             transactionViewmodel.completeTransaction()
-        }
-
+        },
+        onAllocateMore = { transactionViewmodel.allocatedMoreAndSave() },
+        onMoveFromClick = { transactionViewmodel.openMoveFrom() },
+        onMoveBack = { transactionViewmodel.goBackFromMoveFrom() },
+        onPickMoveFromCategory = { transactionViewmodel.moveFromAndSave(it) },
+        onLogOverBudget = { transactionViewmodel.logOverBudgetAndSave() },
+        onDismissBudgetModal = { transactionViewmodel.dismissModal() },
+        onErrorShown = { transactionViewmodel.clearError() }
     )
 }
 
 @Composable
 fun TransactionScreenContent(
     state : TransactionUiState,
+    budgetModalState: BudgetModalState,
     onClose: ()->Unit,
     onCategoryChange : (String) ->Unit,
     onAmountChange : (String) -> Unit,
@@ -126,6 +143,13 @@ fun TransactionScreenContent(
     onDateChange : (Long) -> Unit,
     onTypeChange : (TransactionType) -> Unit,
     onSubmit : () -> Unit,
+    onAllocateMore: () -> Unit,
+    onMoveFromClick: () -> Unit,
+    onMoveBack : () -> Unit,
+    onPickMoveFromCategory: (String) -> Unit,
+    onLogOverBudget: () -> Unit,
+    onDismissBudgetModal: () -> Unit,
+    onErrorShown: () -> Unit
     )
 {
 
@@ -133,103 +157,124 @@ fun TransactionScreenContent(
     val scope = rememberCoroutineScope()
     val isExpense = pagerState.currentPage == 0
 
-
-
     val allocatedExpenseCategories = allExpenseCategories.filter { category ->
         state.allocatedBudgets.any { it.categoryId == category.id }
     }
+
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(isExpense) {
         onTypeChange(if (isExpense) TransactionType.EXPENSE else TransactionType.INCOME)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ){
-        TransactionTopBar(
-            isExpense = isExpense,
-            onCloseClick = onClose,
+    BudgetAdjustmentModal(
+        modalState = budgetModalState,
+        unAllocatedFromBudget = state.unAllocatedFromBudget,
+        onAllocateMore = onAllocateMore,
+        onMoveFromClick = onMoveFromClick,
+        onMoveBack = onMoveBack,
+        onPickMoveFromCategory = onPickMoveFromCategory,
+        onLogOverBudget = onLogOverBudget,
+        onDismiss = onDismissBudgetModal,
+        onClose = onClose
+    )
 
-        )
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent,
+        contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp)
+    ) { innerPadding ->
 
-        if (state.errorMessage != null) {
-            Text(
-                text = state.errorMessage,
-                color = Color.Red,
-                fontSize = 13.sp,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-        }
-
-        TransactionTypeToggle(isExpense, onTypeChanged = {expenseSelected ->
-            scope.launch {
-                pagerState.animateScrollToPage(if (expenseSelected) 0 else 1)
-            }})
-
-        HorizontalPager(
-            state = pagerState,
-            verticalAlignment = Alignment.Top,
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 10.dp)
-                .weight(1f)
-        ) { page ->
+                .padding(innerPadding)
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ){
+            TransactionTopBar(isExpense = isExpense,onCloseClick = onClose)
 
-            if (page == 0) {
+            LaunchedEffect(state.errorMessage) {
+                state.errorMessage?.let { message ->
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = message,
+                            withDismissAction = true,
+                            duration = SnackbarDuration.Short
+                        )
+                        onErrorShown()
+                    }
+                }
+            }
 
-                TransactionForm(
-                    state = state,
-                    categories = allocatedExpenseCategories,
-                    onCategoryChange = onCategoryChange,
-                    onAmountChange = onAmountChange,
-                    onDateChange = onDateChange,
-                    onNoteChange = onNoteChange,
-                    accentColor = ExpenseRed
-                )
+            TransactionTypeToggle(isExpense, onTypeChanged = {expenseSelected ->
+                scope.launch {
+                    pagerState.animateScrollToPage(if (expenseSelected) 0 else 1)
+                }})
 
-            } else {
-                TransactionForm(
-                    state = state,
-                    categories = allIncomeCategories,
-                    onCategoryChange = onCategoryChange,
-                    onAmountChange = onAmountChange,
-                    onDateChange = onDateChange,
-                    onNoteChange = onNoteChange,
-                    accentColor = IncomeGreen
+            HorizontalPager(
+                state = pagerState,
+                verticalAlignment = Alignment.Top,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 10.dp)
+                    .weight(1f)
+            ) { page ->
+
+                if (page == 0) {
+
+                    TransactionForm(
+                        state = state,
+                        categories = allocatedExpenseCategories,
+                        onCategoryChange = onCategoryChange,
+                        onAmountChange = onAmountChange,
+                        onDateChange = onDateChange,
+                        onNoteChange = onNoteChange,
+                        accentColor = ExpenseRed
+                    )
+
+                } else {
+                    TransactionForm(
+                        state = state,
+                        categories = allIncomeCategories,
+                        onCategoryChange = onCategoryChange,
+                        onAmountChange = onAmountChange,
+                        onDateChange = onDateChange,
+                        onNoteChange = onNoteChange,
+                        accentColor = IncomeGreen
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            val accent by animateColorAsState(
+                targetValue = if (isExpense) ExpenseRed else IncomeGreen,
+                label = "saveAccent"
+            )
+
+            Button(onClick = {
+                onSubmit()
+            },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = accent),
+
+                ) {
+
+                Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (isExpense) "Save expense" else "Save income",
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
             }
+
+
         }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        val accent by animateColorAsState(
-            targetValue = if (isExpense) ExpenseRed else IncomeGreen,
-            label = "saveAccent"
-        )
-
-        Button(onClick = {
-            onSubmit()
-        },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = accent),
-
-            ) {
-
-            Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = if (isExpense) "Save expense" else "Save income",
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        }
-
 
     }
 
@@ -380,19 +425,22 @@ fun TransactionTypeToggle(
 @Preview(showBackground = true)
 @Composable
 fun TransactionScreenPreview(){
-
-
             TransactionScreenContent(
                 state = TransactionUiState(),
+                budgetModalState = BudgetModalState.Hidden,
                 onClose = {},
                 onCategoryChange = {},
                 onAmountChange = {},
                 onNoteChange = {},
                 onDateChange = {},
                 onTypeChange = {},
-                onSubmit = {}
+                onSubmit = {},
+                onAllocateMore = {  },
+                onMoveFromClick = {  },
+                onMoveBack = {},
+                onPickMoveFromCategory = {  },
+                onLogOverBudget = {  },
+                onDismissBudgetModal = {},
+                onErrorShown = {}
             )
-    
-
-
 }

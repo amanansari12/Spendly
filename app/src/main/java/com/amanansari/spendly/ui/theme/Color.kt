@@ -20,7 +20,9 @@ val PrimaryDark = Color(0xFF3D31D4 )
 
 val IncomeGreen = Color(0xFF22C55E)
 val ExpenseRed = Color(0xFFFF5757)
-val WarningOrange = Color(0xFFEC8612)
+val WarningBackground = Color(0xFFFAEEDA)
+val WarningText = Color(0xFF854f18)
+
 
 // 25% opacity glow for the primary color (#40 = 25% alpha)
 val AccentGlow = Color(0x406C63FF)

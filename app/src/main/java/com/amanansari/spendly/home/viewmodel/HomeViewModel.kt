@@ -47,7 +47,7 @@ class HomeViewModel @Inject constructor(
                         defaultCurrency = user.currencyCode,
                         openingBalance = budget?.openingBalance ?: 0L,
                         totalIncome = budget?.totalIncome ?: 0L,
-                        totalAllocatedAmount = allocations.totalAllocated,
+                        totalAllocatedAmount = budget?.allocatedAmount ?: 0L,
                         amountSpentFromAllocated = allocations.totalSpent,
                         closingBalance = budget?.closingBalance ?: 0L,
                         carriedFromMonth = budget?.copiedFromMonthKey ?: "",

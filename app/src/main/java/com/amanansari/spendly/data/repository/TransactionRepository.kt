@@ -7,6 +7,7 @@ import com.amanansari.spendly.data.local.dao.BudgetDao
 import com.amanansari.spendly.data.local.dao.TransactionDao
 import com.amanansari.spendly.data.local.dao.UserDao
 import com.amanansari.spendly.data.local.db.SpendlyDatabase
+import com.amanansari.spendly.data.local.entity.BudgetEntity
 import com.amanansari.spendly.data.local.entity.TransactionEntity
 import com.amanansari.spendly.data.local.entity.UserEntity
 import kotlinx.coroutines.flow.Flow
@@ -16,12 +17,16 @@ import javax.inject.Inject
 class TransactionRepository @Inject constructor(
     private val database: SpendlyDatabase,
     private val transactionDao: TransactionDao,
-    private val budgetDao: BudgetDao,
+    private val budgetRepository: BudgetRepository,
     private val budgetAllocationDao: BudgetAllocationDao,
     private val categoryRepository: CategoryRepository,
     private val userRepository: UserRepository,
     private val budgetAllocationRepository: BudgetAllocationRepository
 ) {
+
+    fun getBudget(userId : UUID, month: String): Flow<BudgetEntity?> = budgetRepository.getBudgetByMonth(userId, month)
+
+    fun getUser(): Flow<UserEntity?> = userRepository.getUser()
 
     suspend fun addExpenseTransaction(
         transaction : TransactionEntity,
@@ -38,6 +43,32 @@ class TransactionRepository @Inject constructor(
         }
     }
 
+    suspend fun addExpenseWithReallocation(
+        transaction: TransactionEntity, userId: UUID, categoryId: String, monthKey: String,
+        amount: Long, extraAllocation: Long,
+    ) {
+        categoryRepository.ensureSeeded()
+        database.withTransaction {
+            budgetAllocationDao.adjustAllocatedAmount(userId, monthKey, categoryId, extraAllocation)
+            transactionDao.insertTransaction(transaction)
+            budgetAllocationDao.addExpense(userId, categoryId, monthKey, amount)
+            budgetRepository.recordExtraAllocation(userId, monthKey, extraAllocation)   // ✅ extraAllocation, not amount
+        }
+    }
+
+    suspend fun addExpenseWithMove(
+        transaction: TransactionEntity, userId: UUID, categoryId: String, monthKey: String,
+        amount: Long, fromCategoryId: String, moveAmount: Long,
+    ) {
+        categoryRepository.ensureSeeded()
+        database.withTransaction {
+            budgetAllocationDao.adjustAllocatedAmount(userId, monthKey, fromCategoryId, -moveAmount)
+            budgetAllocationDao.adjustAllocatedAmount(userId, monthKey, categoryId, moveAmount)
+            transactionDao.insertTransaction(transaction)
+            budgetAllocationDao.addExpense(userId, categoryId, monthKey, amount)
+        }
+    }
+
     suspend fun addIncomeTransaction(
         transaction : TransactionEntity,
         userId: UUID,
@@ -47,30 +78,14 @@ class TransactionRepository @Inject constructor(
         categoryRepository.ensureSeeded()
         database.withTransaction {
             transactionDao.insertTransaction(transaction)
-            budgetDao.addIncome(userId,monthKey, amount)
+            budgetRepository.addIncome(userId,monthKey, amount)
         }
     }
 
-    fun getUser(): Flow<UserEntity?> = userRepository.getUser()
+
 
     fun getAllocatedBudgetPartialDetail(userId: UUID, monthKey: String) : Flow<List<AllocatedBudgetPartialDetails?>>
     = budgetAllocationRepository.getAllocationsByMonth(userId,monthKey)
 
-    suspend fun addTransaction(transaction : TransactionEntity){
-        transactionDao.insertTransaction(transaction)
-    }
-
-    suspend fun addIncome(userId : UUID, amount : Long, monthKey : String) {
-        budgetDao.addIncome(userId,monthKey,amount)
-    }
-
-    suspend fun addExpense(
-        userId: UUID,
-        categoryId: String,
-        monthKey: String,
-        amount: Long,
-    ){
-        budgetAllocationDao.addExpense(userId, categoryId, monthKey, amount)
-    }
 
 }

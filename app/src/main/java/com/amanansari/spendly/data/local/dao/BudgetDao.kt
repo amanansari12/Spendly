@@ -31,6 +31,21 @@ interface BudgetDao {
         updatedAt: Long = System.currentTimeMillis()
     )
 
+    @Query("""
+    UPDATE monthly_budget
+    SET allocatedAmount = allocatedAmount + :amount,
+        closingBalance = closingBalance - :amount,
+        updatedAt = :updatedAt,
+        rowVersion = rowVersion + 1
+    WHERE userId = :userId AND monthKey = :monthKey AND deletedAt IS NULL
+""")
+    suspend fun recordExtraAllocation(   // renamed from recordExpense
+        userId: UUID,
+        monthKey: String,
+        amount: Long,
+        updatedAt: Long = System.currentTimeMillis()
+    )
+
     @Query("SELECT * FROM monthly_budget WHERE userId = :userId AND monthKey = :monthKey AND deletedAt IS NULL LIMIT 1")
     fun getBudgetByMonth(userId: UUID, monthKey : String) : Flow<BudgetEntity?>
 

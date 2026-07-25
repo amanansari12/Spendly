@@ -32,8 +32,8 @@ data class BudgetEntity(
     val openingBalance : Long, //? This is the leftover money from the previous month.
     val totalIncome : Long, //Sum of income transactions or imported income entries.
     val allocatedAmount : Long, // The total money available to budget.
-    val closingBalance: Long, // Shows where default allocations came from.
-    val copiedFromMonthKey : String?,
+    val closingBalance: Long,
+    val copiedFromMonthKey : String?, // Shows where default allocations came from.
     val isAutoCopied: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),

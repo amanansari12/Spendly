@@ -64,7 +64,8 @@ import com.amanansari.spendly.ui.theme.IncomeGreen
 import com.amanansari.spendly.ui.theme.LightNavInactive
 import com.amanansari.spendly.ui.theme.LightSurface
 import com.amanansari.spendly.ui.theme.SpendlyTheme
-import com.amanansari.spendly.ui.theme.WarningOrange
+import com.amanansari.spendly.ui.theme.WarningBackground
+import com.amanansari.spendly.ui.theme.WarningText
 import com.amanansari.spendly.utils.toCurrencyString
 import java.math.BigDecimal
 import java.text.SimpleDateFormat
@@ -91,13 +92,18 @@ fun<T : ExpIncCategory> TransactionForm(
     val remaining = BigDecimal(state.allocatedAmountToCategory - state.amountSpentToCategory).movePointLeft(2)
         .toCurrencyString(state.defaultCurrency.code)
 
+
+    val percentSpent = state.budgetSpentPercentage.multiply(BigDecimal(100))
+
     val budgetStatusColor = when {
-        state.budgetSpentPercentage >= BigDecimal(100) -> ExpenseRed
-        state.budgetSpentPercentage >= BigDecimal(75) -> Color(0xFFFFDB58) // same amber as the unallocated warning
+        percentSpent >= BigDecimal(100) -> ExpenseRed
+        percentSpent >= BigDecimal(75) -> Color(0xFFFFDB58) // same amber as the unallocated warning
         else -> IncomeGreen
     }
 
     val categorySelected = categoryFromId(state.categoryId)
+
+
 
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
@@ -132,7 +138,7 @@ fun<T : ExpIncCategory> TransactionForm(
                                 horizontal = 10.dp,
                                 vertical = 2.dp
                             ).background(
-                                color = Color(0xFFE65100).copy(0.85f),
+                                color = WarningBackground,
                                 shape = RoundedCornerShape(18.dp)
                             )
                         ){
@@ -146,14 +152,14 @@ fun<T : ExpIncCategory> TransactionForm(
                                     imageVector = Icons.Default.WarningAmber,
                                     contentDescription = null,
                                     modifier = Modifier.size(10.dp),
-                                    tint = LightSurface
+                                    tint = WarningText
                                 )
 
                                 Text(
                                     text = buildAnnotatedString {
                                         withStyle(
                                             style = SpanStyle(
-                                                color = LightSurface,
+                                                color = WarningText,
                                                 fontWeight = FontWeight.Bold
                                             )
                                         ) {
@@ -168,7 +174,7 @@ fun<T : ExpIncCategory> TransactionForm(
                                     },
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFFE8E6E6)
+                                    color = WarningText
                                 )
                             }
 
@@ -206,7 +212,7 @@ fun<T : ExpIncCategory> TransactionForm(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(
-                                    color = Color(0xFFFFF3CD),
+                                    color = WarningBackground,
                                     shape = RoundedCornerShape(10.dp)
                                 )
                         ){

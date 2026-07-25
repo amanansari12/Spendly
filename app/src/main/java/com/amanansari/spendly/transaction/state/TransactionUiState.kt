@@ -10,6 +10,7 @@ import com.amanansari.spendly.utils.detectDefaultCurrencyInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.util.UUID
 
 data class TransactionUiState(
@@ -20,6 +21,7 @@ data class TransactionUiState(
     val note : String = "Transaction",
     val date : Long = System.currentTimeMillis(),
     val currency: CurrencyInfo = CurrencyInfo("INR", "₹"),
+    val unAllocatedFromBudget : Long = 0L,
     val errorMessage: String? = null,
     val allocatedBudgets : List<AllocatedBudgetPartialDetails> = listOf(
         AllocatedBudgetPartialDetails(
@@ -46,7 +48,12 @@ data class TransactionUiState(
     val budgetSpentPercentage : BigDecimal
         get() = run {
             if (allocatedAmountToCategory > 0) {
-                BigDecimal(amountSpentToCategory).divide(BigDecimal(allocatedAmountToCategory))
+                BigDecimal(amountSpentToCategory)
+                    .divide(
+                        BigDecimal(allocatedAmountToCategory),
+                        4,
+                        RoundingMode.HALF_UP
+                    )
             } else {
                 BigDecimal.ZERO
             }
