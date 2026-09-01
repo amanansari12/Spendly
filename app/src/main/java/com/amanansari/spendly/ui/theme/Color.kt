@@ -14,9 +14,12 @@ val Pink40 = Color(0xFF7D5260)
 // ==============================================
 // SHARED ACCENTS (Identical in Light & Dark Mode)
 // ==============================================
-val Primary = Color(0xFF5248EE )
+
+val Primary = Color(0xFF5248EE)
 val PrimaryLight = Color(0xFF7B6FFF)
 val PrimaryDark = Color(0xFF3D31D4 )
+
+val PrimarySecond = Color(0xFF4d41df)
 
 val IncomeGreen = Color(0xFF22C55E)
 val ExpenseRed = Color(0xFFFF5757)
@@ -42,6 +45,7 @@ val LightGray = Color(0xFFE5E7EB)
 val Platinum = Color(0xFFEBEBEB)
 val BrightGray = Color(0xFFE7E7E7)
 
+val background = Color(0xFFEEECFF)
 
 // Modal overlays
 val LightOverlay = Color(0x44000000)

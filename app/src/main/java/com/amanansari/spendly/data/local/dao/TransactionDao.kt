@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.amanansari.spendly.data.local.entity.TransactionEntity
+import com.amanansari.spendly.data.local.entity.TransactionType
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
@@ -52,7 +53,14 @@ interface TransactionDao {
         suspend fun softDelete(id: UUID, updatedAt: Long = System.currentTimeMillis())
 
 
-        @Query("SELECT * FROM transactions WHERE userId =:userId AND isDeleted = 0")
-        fun getAllTransaction(userId : UUID) : Flow<List<TransactionEntity>>
+        @Query("""
+                SELECT *
+                FROM transactions
+                WHERE 
+                    (userId = :userId)
+                    AND (:category IS NULL OR type = :category)
+                    AND (:month IS NULL OR monthKey = :month);
+        """)
+        fun getAllTransaction(userId : UUID, category : TransactionType?, month : String?) : Flow<List<TransactionEntity?>>
 
 }

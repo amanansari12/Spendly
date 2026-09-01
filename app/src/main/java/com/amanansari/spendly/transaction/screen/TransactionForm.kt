@@ -255,8 +255,6 @@ fun<T : ExpIncCategory> TransactionForm(
                     )
 
 
-
-
                     if(state.categoryId.isNotBlank() && state.type == TransactionType.EXPENSE){
                         Spacer(modifier = Modifier.height(8.dp))
 

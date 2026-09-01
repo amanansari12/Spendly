@@ -65,6 +65,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.amanansari.spendly.components.TransactionTypeToggle
 import com.amanansari.spendly.data.local.entity.TransactionType
 import com.amanansari.spendly.model.allExpenseCategories
 import com.amanansari.spendly.model.allIncomeCategories
@@ -298,9 +299,6 @@ fun TransactionScreenContent(
 
 
 
-
-
-
 @Composable
 fun TransactionTopBar(isExpense: Boolean,
                 onCloseClick: () -> Unit,
@@ -348,90 +346,7 @@ fun TransactionTopBar(isExpense: Boolean,
     }
 }
 
-@Composable
-fun TransactionTypeToggle(
-    isExpense: Boolean,
-    onTypeChanged: (Boolean) -> Unit
-) {
-    // The outer pill-shaped container
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(55.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(LightBg) // Soft, slightly tinted background
-            .padding(7.dp), // Padding creates the gap between the inner button and outer edge
-        // Border with the primary color
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        // Expense Option
-        Box(
-            modifier = Modifier
-                .height(45.dp)
-                .weight(1f)
-                .clip(RoundedCornerShape(12.dp))
-                .background(if (isExpense) ExpenseRed else Color.Transparent) // Or your preferred active expense color
-                .clickable { onTypeChanged(true) }
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            contentAlignment = Alignment.Center
-        ) {
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-
-                Icon(
-                    imageVector = Icons.Default.ArrowDownward,
-                    contentDescription = "Expense Button",
-                    tint = if (isExpense) LightSurface else Color.DarkGray,
-                    modifier = Modifier.size(15.dp)
-                )
-
-                Text(
-                    text = "Expense",
-                    color = if (isExpense) LightSurface else Color.DarkGray,
-                    fontWeight = if (!isExpense) FontWeight.ExtraBold else FontWeight.Medium,
-                    fontSize = 15.sp
-                )
-            }
-
-        }
-        // Income Option
-        Box(
-            modifier = Modifier
-                .height(45.dp)
-                .weight(1f)
-                .clip(RoundedCornerShape(12.dp))
-                .background(if (!isExpense) IncomeGreen else Color.Transparent)
-                .clickable { onTypeChanged(false) }
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            contentAlignment = Alignment.Center
-        ) {
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowUpward,
-                    contentDescription = "Income Button",
-                    tint = if (!isExpense) LightSurface else Color.DarkGray,
-                    modifier = Modifier.size(15.dp)
-                )
-
-                Text(
-                    text = "Income",
-                    color = if (!isExpense) LightSurface else Color.DarkGray,
-                    fontWeight = if (!isExpense) FontWeight.Bold else FontWeight.Medium,
-                    fontSize = 15.sp
-                )
-            }
-
-        }
-    }
-}
 
 
 @Preview(showBackground = true)

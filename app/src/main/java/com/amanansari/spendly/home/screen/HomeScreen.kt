@@ -163,6 +163,10 @@ fun HomeScreenContent(
         else -> LightSurface
     }
 
+    val allocatedExpenseCategories = allExpenseCategories.filter { category ->
+        state.budgetPartialDetail.any { it?.categoryId == category.id }
+    }
+
 
     val surplusMonth: String? = state.carriedFromMonth
         .let { runCatching { YearMonth.parse(it) }.getOrNull() }
@@ -859,7 +863,7 @@ fun HomeScreenContent(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(end = 16.dp)
                 ) {
-                    items(allExpenseCategories){ category ->
+                    items(allocatedExpenseCategories){ category ->
 
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,

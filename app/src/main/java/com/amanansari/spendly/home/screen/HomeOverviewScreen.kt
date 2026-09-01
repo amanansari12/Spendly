@@ -10,6 +10,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import com.amanansari.spendly.model.ExpIncCategory
+import com.amanansari.spendly.transaction.screen.TransactionHistoryScreen
+import com.amanansari.spendly.transaction.screen.TransactionHistoryScreenContentPreview
 import kotlinx.coroutines.launch
 
 // This screen is what actually sits under the "Home" nav route now.
@@ -39,9 +41,12 @@ fun HomeOverviewScreen(
                 onViewAllBudgets = onViewAllBudgets
             )
             1 -> {
-                // TODO: swap this placeholder for your real TransactionHistoryScreen()
-                // once you build it, same way HomeScreen is wired in above.
-                Text("Transaction History screen — coming soon")
+                TransactionHistoryScreen(
+                    onBack = {
+                        scope.launch { pagerState.animateScrollToPage(0) }
+                    }
+                )
+
             }
         }
     }

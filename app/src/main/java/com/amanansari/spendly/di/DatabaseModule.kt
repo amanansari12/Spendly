@@ -27,7 +27,6 @@ object DatabaseModule {
         return DatabaseProvider.getDatabase(context) //? Reusing the Existing Singleton
     }
 
-
     @Provides
     fun provideUserDao(database : SpendlyDatabase) : UserDao = database.userDao()
 
