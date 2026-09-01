@@ -26,6 +26,40 @@ Spendly is intended to help users understand and control their personal finances
 The application is being built as a real product rather than a simple CRUD demonstration. The architecture therefore separates UI, state management, data access, repositories, and persistence.
 
 ---
+## 📱 Download APK
+
+Try the latest development build of Spendly:
+
+[**Download Spendly v0.1.0-alpha APK**](https://github.com/amanansari12/Spendly/releases/latest)
+
+> **Note:** This is a pre-release build and the application is still under active development.
+
+### Current APK includes
+
+- User onboarding
+- Local user profile persistence
+- Home dashboard
+- Income and expense transaction creation
+- Category-based transactions
+- Transaction persistence using Room
+- MVVM architecture
+- Hilt dependency injection
+- Kotlin Coroutines and Flow
+- Budget-aware transaction handling
+
+### Currently in Development
+
+- Completing and refining Add Transaction
+- Budget management
+
+### Next
+
+- Monthly budget management
+- Category-wise budget allocation
+- Budget progress tracking
+- Spending analytics
+- FastAPI backend for backup and synchronization
+---
 
 ## 2. Current Development Status
 
